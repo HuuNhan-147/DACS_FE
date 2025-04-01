@@ -6,7 +6,7 @@ import LoginPage from "../pages/LoginPage";
 import AdminPage from "../pages/AdminPage"; // Import trang Admin
 import { AuthProvider } from "../context/AuthContext";
 import Layout from "../components/Layout";
-
+import CartPage from "../pages/CartPage"; // Import trang giỏ hàng
 const AppRoutes = () => {
   return (
     <AuthProvider>
@@ -19,6 +19,7 @@ const AppRoutes = () => {
             {/* ✅ Route chính xác */}
             <Route path="/login" element={<LoginPage />} />
             <Route path="/admin" element={<AdminPage />} />
+            <Route path="/cart" element={<CartPage />} />
           </Routes>
         </Layout>
       </Router>

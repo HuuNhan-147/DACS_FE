@@ -8,3 +8,4 @@ export const loginUser = async (email, password) => {
     throw new Error(error.response?.data?.message || "Đăng nhập thất bại!");
   }
 };
+// Lấy thông tin profile của user

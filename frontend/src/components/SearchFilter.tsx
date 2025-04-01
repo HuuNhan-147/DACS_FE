@@ -1,6 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { SlidersHorizontal, RefreshCcw } from "lucide-react";
+import { fetchCategory } from "../api/CategoryApi"; // Import API lấy danh mục
+import { ICategory } from "../types/category"; // Import kiểu danh mục
 
 const SearchFilter = ({ initialValues }) => {
   const [filters, setFilters] = useState({
@@ -12,7 +14,21 @@ const SearchFilter = ({ initialValues }) => {
     sortBy: initialValues.sortBy || "latest",
   });
 
+  const [categories, setCategories] = useState<ICategory[]>([]); // Lưu danh mục từ API
   const navigate = useNavigate();
+
+  // Gọi API lấy danh mục
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const data = await fetchCategory();
+        setCategories(data);
+      } catch (error) {
+        console.error("Lỗi khi lấy danh mục:", error);
+      }
+    };
+    loadCategories();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -80,8 +96,15 @@ const SearchFilter = ({ initialValues }) => {
               className="mt-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">Tất cả</option>
-              <option value="electronics">Điện tử</option>
-              <option value="clothing">Thời trang</option>
+              {categories.length > 0 ? (
+                categories.map((category) => (
+                  <option key={category._id} value={category._id}>
+                    {category.name}
+                  </option>
+                ))
+              ) : (
+                <option disabled>Đang tải...</option>
+              )}
             </select>
           </div>
 
@@ -98,7 +121,7 @@ const SearchFilter = ({ initialValues }) => {
             />
           </div>
 
-          {/* Đến */}
+          {/* Giá đến */}
           <div className="flex flex-col">
             <label className="text-sm font-medium text-gray-700">Đến</label>
             <input
