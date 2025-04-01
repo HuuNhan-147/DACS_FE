@@ -23,3 +23,12 @@ export interface IProduct {
   createdAt: string; // Ngày tạo sản phẩm
   updatedAt: string; // Ngày cập nhật sản phẩm
 }
+// Định nghĩa kiểu cho tham số tìm kiếm sản phẩm
+export interface IProductSearchParams {
+  keyword?: string; // Dùng cho backend
+  category?: string;
+  minPrice?: string | number;
+  maxPrice?: string | number;
+  rating?: string | number; // Giá trị từ 1 đến 5
+  sortBy?: string; // Các giá trị có thể là "latest", "priceLowHigh", "priceHighLow", "bestSelling"
+}

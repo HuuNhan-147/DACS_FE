@@ -9,3 +9,12 @@ export const fetchProducts = async () => {
     throw error;
   }
 };
+export const fetchChatbotResponse = async (question) => {
+  try {
+    const response = await api.post("/chatbot", { question }); // Gửi câu hỏi đến backend chatbot
+    return response.data.response; // Trả về phản hồi từ backend (HTML hoặc văn bản)
+  } catch (error) {
+    console.error("Lỗi khi gọi API chatbot:", error);
+    throw error;
+  }
+};

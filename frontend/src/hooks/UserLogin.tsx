@@ -1,31 +1,36 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { loginUser } from "../api/UserApi"; // Import hàm login
+import { loginUser } from "../api/UserApi";
+import { useAuth } from "../context/AuthContext";
 
-const useLogin = () => {
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [user, setUser] = useState<any>(null); // Thêm state lưu thông tin user
+const UserLogin = () => {
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
-  const handleLogin = async (email: string, password: string) => {
+  const handleLogin = async (email, password) => {
     setError(null);
     setLoading(true);
 
     try {
       const data = await loginUser(email, password);
-      localStorage.setItem("token", data.token); // Lưu token vào localStorage
-      localStorage.setItem("user", JSON.stringify(data.user)); // Lưu thông tin user
-      setUser(data.user); // Cập nhật state user
-      navigate("/"); // Chuyển hướng sau khi đăng nhập
-    } catch (err: any) {
+      login(data.user); // Lưu thông tin user vào Context
+
+      // Kiểm tra nếu là admin thì chuyển hướng sang trang Admin
+      if (data.user.role === "admin") {
+        navigate("/admin");
+      } else {
+        navigate("/"); // Nếu không phải admin, quay về trang chủ
+      }
+    } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  return { handleLogin, error, loading, user };
+  return { handleLogin, error, loading };
 };
 
-export default useLogin;
+export default UserLogin;

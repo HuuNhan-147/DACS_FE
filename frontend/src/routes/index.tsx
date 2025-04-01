@@ -1,19 +1,28 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import HomePage from "../pages/HomePage";
-import ProductList from "../pages/ProductList";
-import LoginPage from "../pages/LoginPage"; // Tạo file này nếu chưa có
+import ProductList from "../components/FeaturedProducts";
+import LoginPage from "../pages/LoginPage";
+import AdminPage from "../pages/AdminPage"; // Import trang Admin
+import { AuthProvider } from "../context/AuthContext";
+import Layout from "../components/Layout";
+
 const AppRoutes = () => {
   return (
-    <Router>
-      {" "}
-      {/* Đây là nơi duy nhất chứa Router */}
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/product" element={<ProductList />} />
-        <Route path="/login" element={<LoginPage />} />
-      </Routes>
-    </Router>
+    <AuthProvider>
+      <Router>
+        <Layout>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/products/search" element={<ProductList />} />{" "}
+            <Route path="/products" element={<ProductList />} />{" "}
+            {/* ✅ Route chính xác */}
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/admin" element={<AdminPage />} />
+          </Routes>
+        </Layout>
+      </Router>
+    </AuthProvider>
   );
 };
 
