@@ -29,9 +29,6 @@ interface CartData {
   taxPrice: number;
   totalPrice: number;
 }
-interface ProductCardProps {
-  product: IProduct;
-}
 
 const CartPage = () => {
   const [cartData, setCartData] = useState<CartData | null>(null);
@@ -70,20 +67,25 @@ const CartPage = () => {
       return;
     }
 
-    // Chỉ truyền thông tin sản phẩm trong giỏ hàng
-    const products =
-      cartData?.cart.cartItems.map((item) => ({
-        productId: item.product._id,
-        name: item.product.name,
-        price: item.product.price,
-        image: item.product.image,
-        quantity: item.quantity,
-        countInStock: item.product.countInStock,
-      })) || [];
+    // Kiểm tra xem có sản phẩm nào trong giỏ hàng không
+    if (!cartData?.cart.cartItems || cartData.cart.cartItems.length === 0) {
+      return;
+    }
 
+    // Nếu giỏ hàng có nhiều sản phẩm, tạo mảng sản phẩm
+    const products = cartData.cart.cartItems.map((item) => ({
+      _id: item.product._id, // Thay 'productId' bằng '_id'
+      name: item.product.name,
+      price: item.product.price,
+      image: item.product.image,
+      quantity: item.quantity,
+      countInStock: item.product.countInStock,
+    }));
+
+    // Điều hướng đến trang tạo đơn hàng với sản phẩm và thông tin tóm tắt
     navigate("/create", {
       state: {
-        products,
+        products, // Truyền mảng sản phẩm từ giỏ hàng
         summary: {
           itemsPrice: cartData?.itemsPrice,
           shippingPrice: cartData?.shippingPrice,

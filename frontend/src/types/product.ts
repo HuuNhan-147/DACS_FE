@@ -22,6 +22,7 @@ export interface IProduct {
   reviews: IReview[]; // Danh sách đánh giá
   createdAt: string; // Ngày tạo sản phẩm
   updatedAt: string; // Ngày cập nhật sản phẩm
+  quantity: number; // Chỉ thêm số lượng vào đối tượng giỏ hàng
 }
 // Định nghĩa kiểu cho tham số tìm kiếm sản phẩm
 export interface IProductSearchParams {

@@ -12,6 +12,9 @@ import PaymentResult from "../pages/PaymentPage";
 import OrderPage from "../pages/OrderPage";
 import Chatbot from "../components/chatbot"; // ✅ Import Chatbot
 import ProductDetail from "../components/ProductDetail";
+import Register from "../pages/RegisterPage";
+import ForgotPassword from "../pages/ForgotPassword";
+import ResetPassword from "../pages/ResetPassword";
 const AppRoutes = () => {
   return (
     <AuthProvider>
@@ -28,6 +31,12 @@ const AppRoutes = () => {
             <Route path="/payment-result" element={<PaymentResult />} />
             <Route path="/create" element={<OrderPage />} />
             <Route path="/products/:id" element={<ProductDetail />} />{" "}
+            <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route
+              path="/reset-password/:resetToken"
+              element={<ResetPassword />}
+            />
             {/* Chi tiết sản phẩm */}
           </Routes>
 

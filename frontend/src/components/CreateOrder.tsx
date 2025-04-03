@@ -5,12 +5,25 @@ import { useAuth } from "../context/AuthContext";
 import { createOrder } from "../api/OrderApi";
 import { CheckCircle2 } from "lucide-react";
 
+interface IShippingAddress {
+  fullname: string;
+  phone: string;
+  address: string;
+  city: string;
+  country: string;
+}
+
+interface IOrderData {
+  shippingAddress: IShippingAddress;
+  paymentMethod: string;
+}
+
 const CreateOrderPage: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { getToken } = useAuth();
 
-  const [orderData, setOrderData] = useState({
+  const [orderData, setOrderData] = useState<IOrderData>({
     shippingAddress: {
       fullname: "",
       phone: "",
@@ -21,14 +34,19 @@ const CreateOrderPage: React.FC = () => {
     paymentMethod: "VNPay", // Giữ nguyên phương thức thanh toán
   });
 
-  const [product, setProduct] = useState<IProduct | null>(null);
+  const [products, setProducts] = useState<IProduct[]>([]); // Mảng sản phẩm
+  const [product, setProduct] = useState<IProduct | null>(null); // Sản phẩm mua ngay
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [orderSuccess, setOrderSuccess] = useState<boolean>(false);
 
   useEffect(() => {
-    if (location.state?.product) {
-      setProduct(location.state.product);
+    if (location.state?.products) {
+      setProducts(location.state.products); // Set mảng sản phẩm từ CartPage
+      console.log("Sản phẩm từ giỏ hàng:", location.state.products);
+    } else if (location.state?.product) {
+      setProduct(location.state.product); // Nếu chỉ có một sản phẩm duy nhất
+      console.log("Sản phẩm từ mua ngay:", location.state.product);
     } else {
       navigate("/products");
     }
@@ -58,7 +76,8 @@ const CreateOrderPage: React.FC = () => {
       return;
     }
 
-    if (!product) {
+    // Nếu không có sản phẩm nào, hiển thị lỗi
+    if (products.length === 0 && !product) {
       setError("Không có sản phẩm nào!");
       setLoading(false);
       return;
@@ -66,15 +85,23 @@ const CreateOrderPage: React.FC = () => {
 
     try {
       const orderPayload = {
-        orderItems: [
-          {
-            name: product.name,
-            quantity: 1,
-            image: product.image,
-            price: product.price,
-            product: product._id,
-          },
-        ],
+        orderItems: products.length
+          ? products.map((prod) => ({
+              name: prod.name,
+              quantity: prod.quantity, // Lấy số lượng từ giỏ hàng
+              image: prod.image,
+              price: prod.price,
+              product: prod._id,
+            }))
+          : [
+              {
+                name: product?.name || "",
+                quantity: 1,
+                image: product?.image || "",
+                price: product?.price || 0,
+                product: product?._id || "",
+              },
+            ],
         shippingAddress: orderData.shippingAddress,
         paymentMethod: orderData.paymentMethod,
       };
@@ -235,27 +262,52 @@ const CreateOrderPage: React.FC = () => {
           </div>
 
           {/* Product Information */}
-          {product && (
+          {(product || products.length > 0) && (
             <div className="mt-6 p-4 bg-gray-50 rounded-md">
               <h3 className="text-md font-semibold text-gray-800 mb-3">
                 Thông tin sản phẩm
               </h3>
-              <div className="flex space-x-4 items-center">
-                <img
-                  src={`http://localhost:5000${product.image}`}
-                  alt={product.name}
-                  className="w-20 h-20 object-cover rounded-md"
-                />
-                <div>
-                  <h4 className="text-lg font-semibold">{product.name}</h4>
-                  <p className="text-sm text-gray-600">
-                    Giá: {product.price.toLocaleString("vi-VN")} VND
-                  </p>
+              {product ? (
+                <div className="flex space-x-4 items-center">
+                  <img
+                    src={`http://localhost:5000${product.image}`}
+                    alt={product.name}
+                    className="w-20 h-20 object-cover rounded-md"
+                  />
+                  <div>
+                    <h4 className="text-lg font-semibold">{product.name}</h4>
+                    <p className="text-sm text-gray-600">
+                      Giá: {product.price.toLocaleString("vi-VN")} VND
+                    </p>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                products.map((prod) => (
+                  <div
+                    key={prod._id}
+                    className="flex space-x-4 items-center mb-4"
+                  >
+                    {" "}
+                    {/* Đã thêm key và margin-bottom */}
+                    <img
+                      src={`http://localhost:5000${prod.image}`}
+                      alt={prod.name}
+                      className="w-20 h-20 object-cover rounded-md"
+                    />
+                    <div>
+                      <h4 className="text-lg font-semibold">{prod.name}</h4>
+                      <p className="text-sm text-gray-600">
+                        Giá: {prod.price.toLocaleString("vi-VN")} VND
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        Số lượng: {prod.quantity}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           )}
-
           <div className="mt-6 flex justify-center">
             <button
               type="submit"
