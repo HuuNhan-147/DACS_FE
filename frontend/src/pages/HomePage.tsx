@@ -3,7 +3,6 @@ import React from "react";
 import Banner from "../components/Banner";
 import FeaturedProducts from "../components/FeaturedProducts";
 import Footer from "../components/Footer";
-import Chatbot from "../components/chatbot"; // Import component Chatbot
 
 const HomePage = () => {
   return (
@@ -12,7 +11,6 @@ const HomePage = () => {
         <Banner />
         <FeaturedProducts />
       </main>
-      <Chatbot /> {/* Thêm Chatbot vào trang chủ */}
       <Footer />
     </div>
   );

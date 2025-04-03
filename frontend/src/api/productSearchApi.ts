@@ -20,8 +20,6 @@ export const fetchProducts = async (params: IProductSearchParams = {}) => {
       )
     );
 
-    console.log("📡 Sending API request with params:", cleanedParams);
-
     const response = await api.get<IProduct[]>("/products/search", {
       params: cleanedParams,
       paramsSerializer: {

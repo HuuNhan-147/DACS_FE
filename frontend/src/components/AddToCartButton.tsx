@@ -3,7 +3,8 @@ import { IProduct } from "../types/product";
 import { addToCart } from "../api/CartApi";
 import { toast } from "react-toastify";
 import { useAuth } from "../context/AuthContext";
-import { ShoppingCart, Check } from "lucide-react"; // Thêm icon Check
+import { ShoppingCart, Check } from "lucide-react";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 
 interface AddToCartButtonProps {
   product: IProduct;
@@ -17,31 +18,33 @@ export const AddToCartButton: React.FC<AddToCartButtonProps> = ({
   className = "",
 }) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false); // Thêm state cho trạng thái thành công
+  const [isSuccess, setIsSuccess] = useState(false);
   const { getToken } = useAuth();
+  const navigate = useNavigate(); // Sử dụng useNavigate để điều hướng
 
   const handleAddToCart = async () => {
     const token = getToken();
 
+    // Nếu chưa đăng nhập, chuyển hướng đến trang /login
     if (!token) {
       toast.warning("Vui lòng đăng nhập để thêm vào giỏ hàng!", {
         position: "top-right",
         autoClose: 2000,
       });
+      navigate("/login"); // Chuyển hướng đến trang đăng nhập
       return;
     }
 
     if (product.countInStock <= 0) return;
 
     setIsLoading(true);
-    setIsSuccess(false); // Reset trạng thái thành công
+    setIsSuccess(false);
 
     try {
       await addToCart(product._id, 1, token);
 
-      // Hiệu ứng thành công
       setIsSuccess(true);
-      setTimeout(() => setIsSuccess(false), 2000); // Tự động ẩn hiệu ứng sau 2s
+      setTimeout(() => setIsSuccess(false), 2000);
 
       toast.success("Đã thêm vào giỏ hàng!", {
         position: "top-right",
@@ -68,16 +71,14 @@ export const AddToCartButton: React.FC<AddToCartButtonProps> = ({
         product.countInStock <= 0
           ? "bg-gray-400 cursor-not-allowed"
           : isSuccess
-          ? "bg-green-500" // Màu xanh khi thành công
+          ? "bg-green-500"
           : "bg-blue-600 hover:bg-blue-700"
       } text-white px-4 py-2 rounded-md transition-all duration-300 flex items-center justify-center relative overflow-hidden`}
     >
-      {/* Hiệu ứng nền khi thành công */}
       {isSuccess && (
         <div className="absolute inset-0 bg-green-500 animate-ping opacity-30"></div>
       )}
 
-      {/* Nội dung button */}
       {isLoading ? (
         <>
           <svg
@@ -104,13 +105,12 @@ export const AddToCartButton: React.FC<AddToCartButtonProps> = ({
         </>
       ) : isSuccess ? (
         <>
-          <Check className="h-5 w-5 mr-2 animate-bounce" />{" "}
-          {/* Icon check với hiệu ứng bounce */}
+          <Check className="h-5 w-5 mr-2 animate-bounce" />
           Đã thêm!
         </>
       ) : product.countInStock > 0 ? (
         <>
-          <ShoppingCart className="h-5 w-5 mr-2" /> {/* Icon giỏ hàng */}
+          <ShoppingCart className="h-5 w-5 mr-2" />
           Thêm vào giỏ
         </>
       ) : (

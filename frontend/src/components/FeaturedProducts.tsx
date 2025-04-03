@@ -18,8 +18,6 @@ const ProductList: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-
-      console.log("🔍 Fetching with params:", params);
       const data: IProduct[] = await fetchProducts(params);
       setProducts(data);
     } catch (err) {

@@ -3,7 +3,8 @@ import { useAuth } from "../context/AuthContext";
 import { getCart } from "../api/CartApi";
 import { ShoppingCart, Trash2, ArrowLeft, Plus, Minus } from "lucide-react";
 import { Link } from "react-router-dom";
-
+import { useNavigate } from "react-router-dom";
+import { IProduct } from "../types/product";
 interface CartItem {
   product: {
     _id: string;
@@ -28,15 +29,19 @@ interface CartData {
   taxPrice: number;
   totalPrice: number;
 }
+interface ProductCardProps {
+  product: IProduct;
+}
 
 const CartPage = () => {
   const [cartData, setCartData] = useState<CartData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const { getToken } = useAuth();
-
+  const navigate = useNavigate();
   useEffect(() => {
     const token = getToken();
+
     const fetchCart = async () => {
       if (!token) {
         setError("Vui lòng đăng nhập để xem giỏ hàng!");
@@ -58,6 +63,36 @@ const CartPage = () => {
     fetchCart();
   }, [getToken]);
 
+  const handleBuyNow = () => {
+    const token = getToken();
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
+    // Chỉ truyền thông tin sản phẩm trong giỏ hàng
+    const products =
+      cartData?.cart.cartItems.map((item) => ({
+        productId: item.product._id,
+        name: item.product.name,
+        price: item.product.price,
+        image: item.product.image,
+        quantity: item.quantity,
+        countInStock: item.product.countInStock,
+      })) || [];
+
+    navigate("/create", {
+      state: {
+        products,
+        summary: {
+          itemsPrice: cartData?.itemsPrice,
+          shippingPrice: cartData?.shippingPrice,
+          taxPrice: cartData?.taxPrice,
+          totalPrice: cartData?.totalPrice,
+        },
+      },
+    });
+  };
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -245,8 +280,11 @@ const CartPage = () => {
               </div>
             </div>
 
-            <button className="w-full mt-6 bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition">
-              Tiến hành thanh toán
+            <button
+              onClick={handleBuyNow}
+              className="w-full mt-6 bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition"
+            >
+              Tạo đơn hàng
             </button>
 
             <p className="text-xs text-gray-500 mt-4">

@@ -14,6 +14,7 @@ import { useAuth } from "../context/AuthContext";
 import { fetchCategory } from "../api/CategoryApi";
 import { ICategory } from "../types/category";
 import { getCart } from "../api/CartApi";
+import axios from "axios";
 
 const Header = () => {
   const { user, logout } = useAuth();
@@ -27,13 +28,84 @@ const Header = () => {
     phone: user?.phone || "",
   });
   const [cartItemCount, setCartItemCount] = useState(0);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const [tokenExpired, setTokenExpired] = useState(false);
+
+  // Hàm xử lý đăng xuất tự động
+  const handleAutoLogout = (message: string) => {
+    logout();
+    setTokenExpired(true);
+    alert(message);
+    navigate("/login");
+  };
+
+  // Interceptor axios để xử lý token hết hạn
+  useEffect(() => {
+    const interceptor = axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response && error.response.status === 401) {
+          handleAutoLogout(
+            "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại."
+          );
+        }
+        return Promise.reject(error);
+      }
+    );
+
+    return () => {
+      axios.interceptors.response.eject(interceptor);
+    };
+  }, [logout, navigate]);
+
+  // Kiểm tra token định kỳ
+  useEffect(() => {
+    if (!user) return;
+
+    const checkToken = () => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        handleAutoLogout(
+          "Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại."
+        );
+        return;
+      }
+
+      // Có thể thêm logic kiểm tra thời gian hết hạn của token ở đây
+    };
+
+    const interval = setInterval(checkToken, 300000); // Kiểm tra mỗi 5 phút
+
+    return () => clearInterval(interval);
+  }, [user, logout, navigate]);
+
+  // Hiển thị thông báo nhắc nhở đăng nhập mỗi 10 giây
+  useEffect(() => {
+    if (user) return;
+
+    const interval = setInterval(() => {
+      setShowLoginPrompt(true);
+
+      // Tự động ẩn sau 3 giây
+      setTimeout(() => {
+        setShowLoginPrompt(false);
+      }, 3000);
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, [user]);
 
   const fetchCartItemCount = async () => {
     if (!user) return;
 
     try {
       const token = localStorage.getItem("token");
-      if (!token) return;
+      if (!token) {
+        handleAutoLogout(
+          "Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại."
+        );
+        return;
+      }
 
       const cartData = await getCart(token);
       const count = cartData.cart.cartItems.reduce(
@@ -43,6 +115,9 @@ const Header = () => {
       setCartItemCount(count);
     } catch (error) {
       console.error("Lỗi khi lấy giỏ hàng:", error);
+      if (axios.isAxiosError(error) && error.response?.status === 401) {
+        handleAutoLogout("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+      }
     }
   };
 
@@ -127,7 +202,7 @@ const Header = () => {
                     categories.map((category: ICategory) => (
                       <li key={category._id}>
                         <Link
-                          to={`/category/${category._id}`}
+                          to={`/products/search?category=${category._id}&sortBy=latest`}
                           className="block px-4 py-2 hover:bg-gray-200 transition"
                           onClick={() => setShowDropdown(false)}
                         >
@@ -158,6 +233,26 @@ const Header = () => {
         </div>
 
         <div className="flex items-center space-x-6">
+          <Link
+            to="/orders"
+            className="flex items-center text-lg text-white hover:text-gray-200 font-medium transition"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-7 w-7 mr-2"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+              />
+            </svg>
+            Đơn hàng
+          </Link>
           <Link
             to="/cart"
             className="flex items-center text-lg text-white hover:text-gray-200 font-medium transition relative"
@@ -318,13 +413,32 @@ const Header = () => {
               )}
             </div>
           ) : (
-            <Link
-              to="/login"
-              className="flex items-center text-lg text-white hover:text-gray-200 font-medium transition"
-            >
-              <User className="h-7 w-7 mr-2" />
-              Đăng nhập
-            </Link>
+            <div className="relative">
+              <Link
+                to="/login"
+                className="flex items-center text-lg text-white hover:text-gray-200 font-medium transition"
+              >
+                <User className="h-7 w-7 mr-2" />
+                Đăng nhập
+              </Link>
+
+              {/* Thông báo nhắc nhở đăng nhập */}
+              {showLoginPrompt && (
+                <div className="absolute left-0 top-full mt-2 w-64 bg-yellow-100 text-yellow-800 text-sm px-3 py-2 rounded-md shadow-lg animate-fade-in">
+                  <div className="flex items-start">
+                    <span className="flex-1">
+                      Đăng nhập để trải nghiệm dễ dàng hơn!
+                    </span>
+                    <button
+                      onClick={() => setShowLoginPrompt(false)}
+                      className="ml-2 text-yellow-600 hover:text-yellow-800"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           )}
         </div>
       </div>
