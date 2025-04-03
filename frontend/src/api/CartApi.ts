@@ -37,3 +37,40 @@ export const getCart = async (token: string) => {
     throw new Error(error.response?.data?.message || "Không thể lấy giỏ hàng!");
   }
 };
+// Hàm xóa sản phẩm khỏi giỏ hàng
+export const removeFromCart = async (productId: string, token: string) => {
+  try {
+    const response = await api.delete(`/cart/${productId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`, // Gửi token trong header để xác thực
+      },
+    });
+    return response.data; // Trả về dữ liệu giỏ hàng sau khi cập nhật
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Không thể xóa sản phẩm khỏi giỏ hàng!"
+    );
+  }
+};
+export const updateCartItem = async (
+  productId: string,
+  quantity: number,
+  token: string
+) => {
+  try {
+    const response = await api.put(
+      `/cart/update`, // API cập nhật giỏ hàng
+      { productId, quantity }, // Gửi id sản phẩm và số lượng
+      {
+        headers: {
+          Authorization: `Bearer ${token}`, // Gửi token để xác thực
+        },
+      }
+    );
+    return response.data; // Trả về dữ liệu giỏ hàng sau khi cập nhật
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Không thể cập nhật giỏ hàng!"
+    );
+  }
+};

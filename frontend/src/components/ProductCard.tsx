@@ -10,6 +10,7 @@ interface ProductCardProps {
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const [loading, setLoading] = useState<boolean>(true);
+  const [shippingPrice, setShippingPrice] = useState<number>(0); // Thêm state cho phí vận chuyển
   const { getToken } = useAuth();
   const navigate = useNavigate();
 
@@ -34,8 +35,13 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       return;
     }
 
-    // Nếu đã đăng nhập, điều hướng đến trang order kèm theo thông tin sản phẩm
-    navigate("/create", { state: { product } });
+    // Nếu đã đăng nhập, điều hướng đến trang order kèm theo thông tin sản phẩm và phí vận chuyển
+    navigate("/create", {
+      state: {
+        product,
+        shippingPrice, // Gửi phí vận chuyển cùng với sản phẩm
+      },
+    });
   };
 
   const handleImageClick = () => {
@@ -60,6 +66,17 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       </svg>
     ));
   };
+
+  // Giả sử bạn có một hàm tính phí vận chuyển, ví dụ: phí vận chuyển là 5% giá trị sản phẩm
+  const calculateShippingPrice = () => {
+    const shipping = product.price * 0.05; // Phí vận chuyển là 5% giá trị sản phẩm
+    setShippingPrice(shipping); // Cập nhật phí vận chuyển vào state
+  };
+
+  // Gọi hàm tính phí vận chuyển khi component render lần đầu
+  React.useEffect(() => {
+    calculateShippingPrice();
+  }, [product]);
 
   return (
     <div className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition duration-300 relative p-4">
