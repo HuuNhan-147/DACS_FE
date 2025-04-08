@@ -33,3 +33,13 @@ export interface IProductSearchParams {
   rating?: string | number; // Giá trị từ 1 đến 5
   sortBy?: string; // Các giá trị có thể là "latest", "priceLowHigh", "priceHighLow", "bestSelling"
 }
+export interface IProductUpdate {
+  _id: string; // ID của sản phẩm (ObjectId)
+  name?: string;
+  price?: number;
+  category?: string;
+  rating?: number;
+  countInStock?: number;
+  description?: string;
+  image?: File | null;
+}

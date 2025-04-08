@@ -4,13 +4,18 @@ import Header from "../components/Header";
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
-  const hideHeaderRoutes = ["/login"]; // Danh sách các trang không hiển thị Header
+  const { pathname } = location;
 
-  // Kiểm tra để hiển thị Header chỉ khi không phải ở các route trong danh sách hideHeaderRoutes
+  // Ẩn Header nếu đường dẫn bắt đầu với "/admin" hoặc là các trang cụ thể
+  const hideHeader =
+    pathname.startsWith("/admin") ||
+    ["/register", "/login", "/forgot-password", "/reset-password"].includes(
+      pathname
+    );
+
   return (
     <>
-      {/* Hiển thị Header chỉ khi không phải ở route login */}
-      {!hideHeaderRoutes.includes(location.pathname) && <Header />}
+      {!hideHeader && <Header />}
       {children}
     </>
   );

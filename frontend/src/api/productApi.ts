@@ -1,5 +1,5 @@
 import api from "../config/axios"; // Import axios đã config
-
+import { IProduct } from "../types/product"; // Import kiểu dữ liệu sản phẩm
 export const fetchProducts = async () => {
   try {
     const response = await api.get("/products"); // Không cần baseURL nữa
@@ -63,6 +63,58 @@ export const getProductReviews = async (productId: string) => {
     return response.data; // Trả về dữ liệu danh sách đánh giá từ API
   } catch (error) {
     console.error("Lỗi khi lấy danh sách đánh giá:", error);
+    throw error; // Ném lỗi nếu có
+  }
+};
+export const deleteProduct = async (productId: string, token: string) => {
+  try {
+    // Gửi yêu cầu DELETE đến API để xóa sản phẩm theo ID
+    const response = await api.delete(`/products/${productId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`, // Gửi token trong header Authorization
+      },
+    });
+
+    return response.data; // Trả về phản hồi từ API, có thể là thông báo thành công
+  } catch (error) {
+    console.error("Lỗi khi xóa sản phẩm:", error);
+    throw error; // Ném lỗi nếu có
+  }
+};
+export const addProduct = async (productData: FormData, token: string) => {
+  try {
+    const response = await api.post(
+      "/products", // URL API của bạn
+      productData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error("Lỗi khi thêm sản phẩm: " + error.message);
+  }
+};
+
+export const updateProduct = async (
+  productId: string,
+  productData: IProduct,
+  token: string
+) => {
+  try {
+    // Gửi yêu cầu PUT để sửa sản phẩm theo ID
+    const response = await api.put(`/products/${productId}`, productData, {
+      headers: {
+        Authorization: `Bearer ${token}`, // Gửi token trong header Authorization
+      },
+    });
+
+    return response.data; // Trả về phản hồi từ API, có thể là thông báo thành công hoặc dữ liệu sản phẩm đã sửa
+  } catch (error) {
+    console.error("Lỗi khi sửa sản phẩm:", error);
     throw error; // Ném lỗi nếu có
   }
 };
