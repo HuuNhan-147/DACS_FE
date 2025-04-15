@@ -10,6 +10,7 @@ interface ProductCardProps {
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const [loading, setLoading] = useState<boolean>(true);
+  const [imageSrc, setImageSrc] = useState<string>("");
   const [shippingPrice, setShippingPrice] = useState<number>(0); // Thêm state cho phí vận chuyển
   const { getToken } = useAuth();
   const navigate = useNavigate();

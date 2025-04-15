@@ -1,56 +1,50 @@
 import React, { useState, useEffect } from "react";
 import { IProduct } from "../types/product";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext"; // Import useAuth
-import { deleteProduct } from "../api/productApi"; // API xóa sản phẩm
+import { useAuth } from "../context/AuthContext";
+import { deleteProduct } from "../api/productApi";
 
 interface ProductCardProps {
   product: IProduct;
-  onDelete: (productId: string) => void; // Hàm xử lý xóa sản phẩm
+  onDelete: (productId: string) => void;
 }
 
 const AdminProduct: React.FC<ProductCardProps> = ({ product, onDelete }) => {
   const [loading, setLoading] = useState<boolean>(true);
   const [shippingPrice, setShippingPrice] = useState<number>(0);
-  const { getToken } = useAuth(); // Lấy hàm getToken từ context
+  const { getToken } = useAuth();
   const navigate = useNavigate();
 
-  // Hàm xử lý lỗi khi ảnh không tải được
   const handleImageError = (
     e: React.SyntheticEvent<HTMLImageElement, Event>
   ) => {
     const target = e.target as HTMLImageElement;
-    target.src = "/images/no-image.png"; // Thay ảnh khi không có ảnh sản phẩm
+    target.src = "/images/no-image.png";
     target.alt = "Ảnh sản phẩm không khả dụng";
     setLoading(false);
   };
 
-  // Hàm khi ảnh tải thành công
   const handleImageLoad = () => {
     setLoading(false);
   };
 
   const handleEdit = () => {
-    // Chuyển hướng đến trang cập nhật sản phẩm và truyền thông tin sản phẩm
-    navigate(`/admin/product/update/${product._id}`);
+    navigate(`/admin/product/${product._id}`);
   };
 
-  // Hàm xóa sản phẩm với xác nhận
   const handleDelete = async () => {
-    const token = getToken(); // Lấy token từ AuthContext
+    const token = getToken();
     if (!token) {
       navigate("/login");
       return;
     }
 
-    // Xác nhận xóa sản phẩm
     const confirmed = window.confirm("Bạn có chắc chắn muốn xóa sản phẩm này?");
     if (!confirmed) return;
 
-    // Gọi API xóa sản phẩm
     try {
-      await deleteProduct(product._id, token); // Truyền product._id và token vào API xóa sản phẩm
-      onDelete(product._id); // Cập nhật lại danh sách sản phẩm sau khi xóa
+      await deleteProduct(product._id, token);
+      onDelete(product._id);
       alert("Sản phẩm đã được xóa thành công!");
     } catch (error) {
       console.error("Không thể xóa sản phẩm", error);
@@ -59,10 +53,9 @@ const AdminProduct: React.FC<ProductCardProps> = ({ product, onDelete }) => {
   };
 
   const imageUrl = product.image
-    ? `http://localhost:5000${product.image}` // URL ảnh sản phẩm
+    ? `http://localhost:5000${product.image}`
     : "/images/no-image.png";
 
-  // Hàm render sao (đánh giá sao)
   const renderStars = () => {
     return [...Array(5)].map((_, i) => (
       <svg
@@ -70,8 +63,7 @@ const AdminProduct: React.FC<ProductCardProps> = ({ product, onDelete }) => {
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 24 24"
         fill={i < product.rating ? "yellow" : "gray"}
-        width="20"
-        height="20"
+        className="w-5 h-5"
       >
         <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
       </svg>
@@ -79,46 +71,64 @@ const AdminProduct: React.FC<ProductCardProps> = ({ product, onDelete }) => {
   };
 
   useEffect(() => {
-    const shipping = product.price * 0.05; // Tính phí vận chuyển
+    const shipping = product.price * 0.05;
     setShippingPrice(shipping);
   }, [product]);
 
   return (
-    <div className="product-card">
-      {/* Phần hình ảnh sản phẩm */}
-      <div>
-        {loading && <div>Đang tải ảnh...</div>}
+    <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
+      {/* Product Image Section */}
+      <div className="relative">
+        {loading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+            <span className="text-gray-500">Đang tải ảnh...</span>
+          </div>
+        )}
         <img
           src={imageUrl}
           alt={product.name}
           onError={handleImageError}
           onLoad={handleImageLoad}
           loading="lazy"
-          style={{ cursor: "pointer" }}
+          className="w-full aspect-square object-contain p-2 bg-white"
         />
-        {product.rating === 5 && <span>HOT</span>}
+        {product.rating === 5 && (
+          <span className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
+            HOT
+          </span>
+        )}
       </div>
 
-      {/* Phần thông tin sản phẩm */}
-      <div>
-        <h3>{product.name}</h3>
-        <p>{product.description}</p>
+      {/* Product Info Section */}
+      <div className="p-4">
+        <h3 className="text-lg font-semibold text-gray-800 mb-1 truncate">
+          {product.name}
+        </h3>
+        <p className="text-gray-600 text-sm mb-2 line-clamp-2 h-10">
+          {product.description}
+        </p>
 
-        <div>
-          <span>{product.price.toLocaleString()} VND</span>
-          <span>{renderStars()}</span>
+        <div className="flex justify-between items-center mb-2">
+          <span className="text-lg font-bold text-blue-600">
+            {product.price.toLocaleString()} VND
+          </span>
+          <div className="flex">{renderStars()}</div>
         </div>
 
-        <div>
-          <span>Còn {product.countInStock} sản phẩm</span>
-          <div>
-            {/* Thay nút "Mua ngay" bằng nút Sửa và Xóa */}
-            <button onClick={handleEdit} className="btn-edit">
-              xem chi tiết
+        <div className="flex justify-between items-center mt-4">
+          <span className="text-sm text-gray-500">
+            Còn {product.countInStock} sản phẩm
+          </span>
+          <div className="flex space-x-2">
+            <button
+              onClick={handleEdit}
+              className="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 transition-colors"
+            >
+              Chi tiết
             </button>
             <button
               onClick={handleDelete}
-              className="btn-delete"
+              className="px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600 transition-colors disabled:opacity-50"
               disabled={product.countInStock <= 0}
             >
               Xóa

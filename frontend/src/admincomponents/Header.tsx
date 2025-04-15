@@ -1,11 +1,24 @@
-import React, { useState, useEffect } from "react";
-import { User, LogOut, ShieldCheck, ChevronDown, Edit, X } from "lucide-react";
+import React, { useState } from "react";
+import {
+  User,
+  LogOut,
+  ShieldCheck,
+  Edit,
+  X,
+  Home,
+  Package,
+  List,
+  Users,
+  ShoppingCart,
+  Key,
+  ChevronDown,
+} from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import axios from "axios";
+import { updateUserProfile } from "../api/UserApi";
 
 const Header = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, token } = useAuth();
   const navigate = useNavigate();
   const [showProfile, setShowProfile] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -13,6 +26,7 @@ const Header = () => {
     name: user?.name || "",
     phone: user?.phone || "",
   });
+  const [tokenExpired, setTokenExpired] = useState(false);
 
   const handleLogout = () => {
     if (window.confirm("Bạn có chắc chắn muốn đăng xuất không?")) {
@@ -32,10 +46,60 @@ const Header = () => {
     setProfileData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSaveProfile = () => {
-    console.log("Dữ liệu cập nhật:", profileData);
-    setIsEditing(false);
+  const handleAutoLogout = (message: string) => {
+    logout();
+    setTokenExpired(true);
+    alert(message);
+    navigate("/login");
   };
+
+  const handleSaveProfile = async () => {
+    try {
+      if (!token) {
+        handleAutoLogout(
+          "Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại."
+        );
+        return;
+      }
+
+      const updatedUser = await updateUserProfile(profileData, token);
+      alert("Cập nhật thông tin thành công!");
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Lỗi khi cập nhật thông tin người dùng:", error);
+      alert("Cập nhật thông tin thất bại. Vui lòng thử lại sau.");
+    }
+  };
+
+  const handleChangePassword = () => {
+    navigate("/change-password");
+    setShowProfile(false);
+  };
+
+  // Danh sách các mục điều hướng với icon tương ứng
+  const navItems = [
+    { path: "/admin", name: "Trang chủ", icon: <Home size={18} /> },
+    {
+      path: "/admin/products",
+      name: "Quản lý sản phẩm",
+      icon: <Package size={18} />,
+    },
+    {
+      path: "/admin/categories",
+      name: "Quản lý danh mục",
+      icon: <List size={18} />,
+    },
+    {
+      path: "/admin/users",
+      name: "Quản lý người dùng",
+      icon: <Users size={18} />,
+    },
+    {
+      path: "/admin/orders",
+      name: "Quản lý đơn hàng",
+      icon: <ShoppingCart size={18} />,
+    },
+  ];
 
   return (
     <header className="bg-gradient-to-r from-gray-800 to-gray-900 shadow-sm sticky top-0 z-50">
@@ -45,49 +109,20 @@ const Header = () => {
           <Link to="/admin">NodeX-Store</Link>
         </div>
 
-        {/* Menu chính */}
-        <nav className="hidden md:flex space-x-8">
-          <ul className="flex space-x-8">
-            <li>
-              <Link
-                to="/admin"
-                className="text-lg text-white hover:text-gray-200 font-medium transition"
-              >
-                Trang chủ
-              </Link>
-            </li>
-            <li>
-              <Link
-                to="/admin/products"
-                className="text-lg text-white hover:text-gray-200 font-medium transition"
-              >
-                Quản lý sản phẩm
-              </Link>
-            </li>
-            <li>
-              <Link
-                to="/admin/categories"
-                className="text-lg text-white hover:text-gray-200 font-medium transition"
-              >
-                Quản lý danh mục
-              </Link>
-            </li>
-            <li>
-              <Link
-                to="/admin/users"
-                className="text-lg text-white hover:text-gray-200 font-medium transition"
-              >
-                Quản lý người dùng
-              </Link>
-            </li>
-            <li>
-              <Link
-                to="/admin/orders"
-                className="text-lg text-white hover:text-gray-200 font-medium transition"
-              >
-                Quản lý đơn hàng
-              </Link>
-            </li>
+        {/* Menu chính với icon */}
+        <nav className="hidden md:flex space-x-2">
+          <ul className="flex space-x-4">
+            {navItems.map((item) => (
+              <li key={item.path}>
+                <Link
+                  to={item.path}
+                  className="flex items-center text-lg text-white hover:text-gray-200 font-medium transition px-3 py-2 rounded hover:bg-gray-700"
+                >
+                  <span className="mr-2">{item.icon}</span>
+                  {item.name}
+                </Link>
+              </li>
+            ))}
           </ul>
         </nav>
 
@@ -106,7 +141,7 @@ const Header = () => {
                 {user.name}
               </button>
 
-              {/* Nút Admin (nếu là Admin) */}
+              {/* Nút Admin (nếu là Admin) - Giữ nguyên như cũ */}
               {user.isAdmin && (
                 <Link
                   to="/admin"
@@ -209,14 +244,31 @@ const Header = () => {
                           </div>
                         </div>
 
-                        <div className="flex justify-end pt-2">
+                        <div className="space-y-2">
                           <button
-                            onClick={() => setIsEditing(true)}
-                            className="flex items-center px-3 py-1 text-sm bg-indigo-50 text-indigo-600 rounded-md hover:bg-indigo-100 transition"
+                            onClick={handleChangePassword}
+                            className="w-full flex items-center justify-center px-3 py-2 text-sm bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition"
                           >
-                            <Edit className="h-4 w-4 mr-1" />
-                            Cập nhật
+                            <Key className="h-4 w-4 mr-2" />
+                            Đổi mật khẩu
                           </button>
+
+                          <div className="flex justify-between pt-2">
+                            <button
+                              onClick={handleLogout}
+                              className="flex items-center px-3 py-1 text-sm text-red-600 hover:bg-red-50 rounded-md transition"
+                            >
+                              <LogOut className="h-4 w-4 mr-1" />
+                              Đăng xuất
+                            </button>
+                            <button
+                              onClick={() => setIsEditing(true)}
+                              className="flex items-center px-3 py-1 text-sm bg-indigo-50 text-indigo-600 rounded-md hover:bg-indigo-100 transition"
+                            >
+                              <Edit className="h-4 w-4 mr-1" />
+                              Cập nhật
+                            </button>
+                          </div>
                         </div>
                       </div>
                     )}
@@ -227,9 +279,9 @@ const Header = () => {
           ) : (
             <Link
               to="/login"
-              className="flex items-center text-lg text-white hover:text-gray-200 font-medium transition"
+              className="flex items-center text-lg text-white hover:text-gray-200 font-medium transition px-3 py-2 rounded hover:bg-gray-700"
             >
-              <User className="h-7 w-7 mr-2" />
+              <User className="h-5 w-5 mr-2" />
               Đăng nhập
             </Link>
           )}

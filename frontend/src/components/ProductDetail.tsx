@@ -3,13 +3,15 @@ import { fetchProductDetails } from "../api/productApi";
 import { fetchCategory } from "../api/CategoryApi";
 import { IProduct } from "../types/product";
 import { ICategory } from "../types/category";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { AddToCartButton } from "./AddToCartButton";
 import { submitReview, getProductReviews } from "../api/productApi";
 import { useAuth } from "../context/AuthContext";
 
 const ProductDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const location = useLocation();
+  const passedProduct = location.state?.product as IProduct | undefined;
   const [product, setProduct] = useState<IProduct | null>(null);
   const [categories, setCategories] = useState<ICategory[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -34,6 +36,12 @@ const ProductDetail: React.FC = () => {
     };
 
     const getProductDetail = async () => {
+      if (passedProduct) {
+        setProduct(passedProduct); // 👈 nếu có product được truyền từ ProductCard
+        setLoading(false);
+        return;
+      }
+
       try {
         if (!id) {
           setError("Không tìm thấy ID sản phẩm.");
@@ -50,7 +58,7 @@ const ProductDetail: React.FC = () => {
 
     getCategories();
     getProductDetail();
-  }, [id]);
+  }, [id, passedProduct]);
 
   const handleGetReviews = async () => {
     try {
@@ -130,6 +138,9 @@ const ProductDetail: React.FC = () => {
       });
     }
   };
+  const handleImageLoad = () => {
+    setLoading(false);
+  };
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
@@ -139,6 +150,7 @@ const ProductDetail: React.FC = () => {
           <img
             src={product?.image}
             alt={product?.name}
+            onLoad={handleImageLoad}
             className="w-full rounded-lg shadow-lg object-cover"
           />
         </div>

@@ -1,44 +1,45 @@
-import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { resetPassword } from "../api/UserApi";
+import React, { useState } from "react";
+import { updatePassword } from "../api/UserApi";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext"; // 🔥 Thêm dòng này
 import bgImage from "../assets/backgroundLogin.jpg";
-
-const ResetPassword = () => {
-  const [newPassword, setNewPassword] = useState<string>("");
-  const [confirmPassword, setConfirmPassword] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(false);
-  const [message, setMessage] = useState<string | null>(null);
+import { jwtDecode } from "jwt-decode";
+const ChangePassword = () => {
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
-
-  const { resetToken } = useParams();
+  const [message, setMessage] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { getToken } = useAuth(); // 🔥 Lấy token từ context
 
-  useEffect(() => {
-    if (!resetToken) {
-      setError("Không có token xác nhận.");
-    }
-  }, [resetToken]);
-
-  const handleResetPassword = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+    setMessage(null);
+    setLoading(true);
 
-    if (newPassword !== confirmPassword) {
-      setError("Mật khẩu xác nhận không khớp.");
+    const token = getToken();
+    if (!token) {
+      setError("Bạn chưa đăng nhập!");
+      setLoading(false);
       return;
     }
 
-    setLoading(true);
-    setError(null);
-    setMessage(null);
-
     try {
-      await resetPassword(resetToken, newPassword);
-      setMessage("Mật khẩu của bạn đã được thay đổi thành công.");
-      setTimeout(() => navigate("/login"), 2000);
-    } catch (error: any) {
-      setError(error.message || "Lỗi khi thay đổi mật khẩu!");
-    } finally {
-      setLoading(false);
+      await updatePassword(currentPassword, newPassword, token);
+      setMessage("Mật khẩu đã được cập nhật thành công!");
+
+      // 👉 Decode token để kiểm tra role
+      const decoded: any = jwtDecode(token);
+      const isAdmin = decoded?.isAdmin === true;
+
+      // ⏳ Chờ rồi chuyển hướng
+      setTimeout(() => {
+        navigate(isAdmin ? "/admin" : "/");
+      }, 3000);
+    } catch (err: any) {
+      setError(err.message);
     }
   };
 
@@ -50,9 +51,11 @@ const ResetPassword = () => {
       <div className="bg-white bg-opacity-95 p-12 rounded-2xl shadow-xl w-full max-w-md">
         <div className="text-center mb-8">
           <h2 className="text-4xl font-extrabold text-gray-800 mb-2">
-            Đặt lại mật khẩu
+            Đổi mật khẩu
           </h2>
-          <p className="text-xl text-gray-600">Nhập mật khẩu mới của bạn</p>
+          <p className="text-xl text-gray-600">
+            Nhập mật khẩu hiện tại và mật khẩu mới
+          </p>
         </div>
 
         {error && (
@@ -71,7 +74,25 @@ const ResetPassword = () => {
           </div>
         )}
 
-        <form onSubmit={handleResetPassword} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label
+              htmlFor="currentPassword"
+              className="block text-xl font-medium text-gray-700 mb-2"
+            >
+              Mật khẩu hiện tại
+            </label>
+            <input
+              id="currentPassword"
+              type="password"
+              required
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              className="w-full p-4 border-2 border-gray-200 rounded-xl text-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+              placeholder="Nhập mật khẩu hiện tại"
+            />
+          </div>
+
           <div>
             <label
               htmlFor="newPassword"
@@ -81,34 +102,12 @@ const ResetPassword = () => {
             </label>
             <input
               id="newPassword"
-              name="newPassword"
               type="password"
-              autoComplete="new-password"
               required
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               className="w-full p-4 border-2 border-gray-200 rounded-xl text-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
               placeholder="Nhập mật khẩu mới"
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="confirmPassword"
-              className="block text-xl font-medium text-gray-700 mb-2"
-            >
-              Xác nhận mật khẩu
-            </label>
-            <input
-              id="confirmPassword"
-              name="confirmPassword"
-              type="password"
-              autoComplete="new-password"
-              required
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full p-4 border-2 border-gray-200 rounded-xl text-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-              placeholder="Nhập lại mật khẩu mới"
             />
           </div>
 
@@ -144,7 +143,7 @@ const ResetPassword = () => {
                 Đang xử lý...
               </span>
             ) : (
-              "Đặt lại mật khẩu"
+              "Cập nhật mật khẩu"
             )}
           </button>
         </form>
@@ -153,4 +152,4 @@ const ResetPassword = () => {
   );
 };
 
-export default ResetPassword;
+export default ChangePassword;

@@ -20,6 +20,7 @@ import AdminProductList from "../admincomponents/AdminProductList";
 import AddProduct from "../admincomponents/AddProduct";
 import UpdateProduct from "../admincomponents/GetDetail";
 import GetDetail from "../admincomponents/GetDetail";
+import ChangePassword from "../pages/ChangePassword";
 const AppRoutes = () => {
   return (
     <AuthProvider>
@@ -46,6 +47,7 @@ const AppRoutes = () => {
                     path="/reset-password/:resetToken"
                     element={<ResetPassword />}
                   />
+                  <Route path="/change-password" element={<ChangePassword />} />
                 </Routes>
                 <Chatbot />
               </Layout>
@@ -61,10 +63,7 @@ const AppRoutes = () => {
                   <Route path="/" element={<AdminPage />} />
                   <Route path="/products" element={<AdminProductList />} />
                   <Route path="/add-product" element={<AddProduct />} />
-                  <Route
-                    path="/admin/product/update/:id"
-                    element={<GetDetail />}
-                  />
+                  <Route path="/admin/product/:id" element={<GetDetail />} />
                 </Routes>
                 <Chatbot />
               </AdminLayout>

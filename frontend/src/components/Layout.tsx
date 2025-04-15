@@ -9,9 +9,13 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   // Ẩn Header nếu đường dẫn bắt đầu với "/admin" hoặc là các trang cụ thể
   const hideHeader =
     pathname.startsWith("/admin") ||
-    ["/register", "/login", "/forgot-password", "/reset-password"].includes(
-      pathname
-    );
+    [
+      "/register",
+      "/login",
+      "/forgot-password",
+      "/reset-password",
+      "/change-password",
+    ].includes(pathname);
 
   return (
     <>

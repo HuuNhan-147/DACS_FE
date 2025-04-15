@@ -5,21 +5,18 @@ import {
   Phone,
   LogOut,
   ShieldCheck,
-  ChevronDown,
   Edit,
   X,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { fetchCategory } from "../api/CategoryApi";
-import { ICategory } from "../types/category";
 import { getCart } from "../api/CartApi";
 import axios from "axios";
+import { jwtDecode } from "jwt-decode";
+import { updateUserProfile } from "../api/UserApi";
 const Header = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, token } = useAuth();
   const navigate = useNavigate();
-  const [categories, setCategories] = useState<ICategory[]>([]);
-  const [showDropdown, setShowDropdown] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [profileData, setProfileData] = useState({
@@ -29,6 +26,23 @@ const Header = () => {
   const [cartItemCount, setCartItemCount] = useState(0);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [tokenExpired, setTokenExpired] = useState(false);
+
+  // Hàm kiểm tra token hết hạn
+  const checkTokenExpiration = (token: string) => {
+    try {
+      const decodedToken: any = jwtDecode(token);
+      const currentTime = Date.now() / 1000;
+
+      if (decodedToken.exp < currentTime) {
+        handleAutoLogout("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error("Lỗi khi giải mã token:", error);
+      return true;
+    }
+  };
 
   // Hàm xử lý đăng xuất tự động
   const handleAutoLogout = (message: string) => {
@@ -70,10 +84,15 @@ const Header = () => {
         return;
       }
 
-      // Có thể thêm logic kiểm tra thời gian hết hạn của token ở đây
+      // Kiểm tra thời gian hết hạn của token
+      checkTokenExpiration(token);
     };
 
-    const interval = setInterval(checkToken, 300000); // Kiểm tra mỗi 5 phút
+    // Kiểm tra ngay lần đầu
+    checkToken();
+
+    // Kiểm tra định kỳ mỗi phút
+    const interval = setInterval(checkToken, 60000);
 
     return () => clearInterval(interval);
   }, [user, logout, navigate]);
@@ -106,6 +125,9 @@ const Header = () => {
         return;
       }
 
+      // Kiểm tra token trước khi gọi API
+      if (checkTokenExpiration(token)) return;
+
       const cartData = await getCart(token);
       const count = cartData.cart.cartItems.reduce(
         (total, item) => total + item.quantity,
@@ -119,19 +141,6 @@ const Header = () => {
       }
     }
   };
-
-  useEffect(() => {
-    const loadCategories = async () => {
-      try {
-        const data: ICategory[] = await fetchCategory();
-        setCategories(data);
-      } catch (error) {
-        console.error("Lỗi khi lấy danh mục:", error);
-      }
-    };
-    loadCategories();
-    fetchCartItemCount();
-  }, []);
 
   useEffect(() => {
     if (user) {
@@ -166,9 +175,24 @@ const Header = () => {
     setProfileData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSaveProfile = () => {
-    console.log("Dữ liệu cập nhật:", profileData);
-    setIsEditing(false);
+  const handleSaveProfile = async () => {
+    try {
+      if (!token) {
+        handleAutoLogout(
+          "Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại."
+        );
+        return;
+      }
+
+      const updatedUser = await updateUserProfile(profileData, token); // Gọi API
+
+      // Nếu update thành công, bạn có thể cập nhật lại user context (nếu có logic update user ở context)
+      alert("Cập nhật thông tin thành công!");
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Lỗi khi cập nhật thông tin người dùng:", error);
+      alert("Cập nhật thông tin thất bại. Vui lòng thử lại sau.");
+    }
   };
 
   return (
@@ -187,33 +211,6 @@ const Header = () => {
               >
                 Trang chủ
               </Link>
-            </li>
-            <li className="relative">
-              <button
-                onClick={() => setShowDropdown(!showDropdown)}
-                className="flex items-center text-lg text-white hover:text-gray-200 font-medium transition"
-              >
-                Danh mục <ChevronDown className="h-5 w-5 ml-2" />
-              </button>
-              {showDropdown && (
-                <ul className="absolute left-0 mt-2 w-48 bg-white text-gray-800 shadow-lg rounded-lg">
-                  {categories.length > 0 ? (
-                    categories.map((category: ICategory) => (
-                      <li key={category._id}>
-                        <Link
-                          to={`/products/search?category=${category._id}&sortBy=latest`}
-                          className="block px-4 py-2 hover:bg-gray-200 transition"
-                          onClick={() => setShowDropdown(false)}
-                        >
-                          {category.name}
-                        </Link>
-                      </li>
-                    ))
-                  ) : (
-                    <li className="px-4 py-2">Không có danh mục</li>
-                  )}
-                </ul>
-              )}
             </li>
             <li>
               <button

@@ -57,3 +57,50 @@ export const resetPassword = async (resetToken, newPassword) => {
     throw new Error("Lỗi kết nối đến máy chủ!");
   }
 };
+export const updatePassword = async (
+  oldPassword: string,
+  newPassword: string,
+  token: string
+) => {
+  try {
+    const response = await api.put(
+      "/users/update-password",
+      {
+        oldPassword, // ✅ theo yêu cầu backend
+        newPassword, // ✅ theo yêu cầu backend
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message || "Cập nhật mật khẩu thất bại!"
+    );
+  }
+};
+// Cập nhật thông tin người dùng
+export const updateUserProfile = async (
+  updatedData: {
+    name?: string;
+    email?: string;
+    phone?: string; // nếu có avatar hoặc trường mở rộng khác
+  },
+  token: string
+) => {
+  try {
+    const response = await api.put("/users/profile", updatedData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data; // Trả về user sau khi cập nhật thành công
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message || "Cập nhật thông tin thất bại!"
+    );
+  }
+};
