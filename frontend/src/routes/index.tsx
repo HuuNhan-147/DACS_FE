@@ -21,56 +21,74 @@ import AddProduct from "../admincomponents/AddProduct";
 import UpdateProduct from "../admincomponents/GetDetail";
 import GetDetail from "../admincomponents/GetDetail";
 import ChangePassword from "../pages/ChangePassword";
+import { CartProvider } from "../context/CartContext";
+import CategoryManagement from "../admincomponents/CategoryManagement";
+import AdminUserManagement from "../admincomponents/AdminUserManagement";
+import AdminOrderManager from "../admincomponents/AdminOrderManager";
 const AppRoutes = () => {
   return (
     <AuthProvider>
-      <Router>
-        <Routes>
-          {/* Routes cho trang người dùng */}
-          <Route
-            path="/*"
-            element={
-              <Layout>
-                <Routes>
-                  <Route path="/" element={<HomePage />} />
-                  <Route path="/products/search" element={<ProductList />} />
-                  <Route path="/products" element={<ProductList />} />
-                  <Route path="/login" element={<LoginPage />} />
-                  <Route path="/cart" element={<CartPage />} />
-                  <Route path="/orders" element={<ListOrderPage />} />
-                  <Route path="/payment-result" element={<PaymentResult />} />
-                  <Route path="/create" element={<OrderPage />} />
-                  <Route path="/products/:id" element={<ProductDetail />} />
-                  <Route path="/register" element={<Register />} />
-                  <Route path="/forgot-password" element={<ForgotPassword />} />
-                  <Route
-                    path="/reset-password/:resetToken"
-                    element={<ResetPassword />}
-                  />
-                  <Route path="/change-password" element={<ChangePassword />} />
-                </Routes>
-                <Chatbot />
-              </Layout>
-            }
-          />
+      <CartProvider>
+        <Router>
+          <Routes>
+            {/* Routes cho trang người dùng */}
+            <Route
+              path="/*"
+              element={
+                <Layout>
+                  <Routes>
+                    <Route path="/" element={<HomePage />} />
+                    <Route path="/products/search" element={<ProductList />} />
+                    <Route path="/products" element={<ProductList />} />
+                    <Route path="/login" element={<LoginPage />} />
+                    <Route path="/cart" element={<CartPage />} />
+                    <Route path="/orders" element={<ListOrderPage />} />
+                    <Route path="/payment-result" element={<PaymentResult />} />
+                    <Route path="/create" element={<OrderPage />} />
+                    <Route path="/products/:id" element={<ProductDetail />} />
+                    <Route path="/register" element={<Register />} />
+                    <Route
+                      path="/forgot-password"
+                      element={<ForgotPassword />}
+                    />
+                    <Route
+                      path="/reset-password/:resetToken"
+                      element={<ResetPassword />}
+                    />
+                    <Route
+                      path="/change-password"
+                      element={<ChangePassword />}
+                    />
+                  </Routes>
+                  <Chatbot />
+                </Layout>
+              }
+            />
 
-          {/* Routes cho trang admin */}
-          <Route
-            path="/admin/*"
-            element={
-              <AdminLayout>
-                <Routes>
-                  <Route path="/" element={<AdminPage />} />
-                  <Route path="/products" element={<AdminProductList />} />
-                  <Route path="/add-product" element={<AddProduct />} />
-                  <Route path="/admin/product/:id" element={<GetDetail />} />
-                </Routes>
-                <Chatbot />
-              </AdminLayout>
-            }
-          />
-        </Routes>
-      </Router>
+            {/* Routes cho trang admin */}
+            <Route
+              path="/admin/*"
+              element={
+                <AdminLayout>
+                  <Routes>
+                    <Route path="/" element={<AdminPage />} />
+                    <Route path="/products" element={<AdminProductList />} />
+                    <Route path="/add-product" element={<AddProduct />} />
+                    <Route path="/product/:id" element={<GetDetail />} />
+                    <Route
+                      path="/categories"
+                      element={<CategoryManagement />}
+                    />
+                    <Route path="/users" element={<AdminUserManagement />} />
+                    <Route path="/orders" element={<AdminOrderManager />} />
+                  </Routes>
+                  <Chatbot />
+                </AdminLayout>
+              }
+            />
+          </Routes>
+        </Router>
+      </CartProvider>
     </AuthProvider>
   );
 };

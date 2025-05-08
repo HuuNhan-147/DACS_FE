@@ -104,3 +104,89 @@ export const updateUserProfile = async (
     );
   }
 };
+// Lấy danh sách tất cả người dùng (Admin)
+export const getAllUsers = async (token: string) => {
+  try {
+    const response = await api.get("/users", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data; // Trả về danh sách người dùng
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message || "Lấy danh sách người dùng thất bại!"
+    );
+  }
+};
+
+// Cập nhật thông tin người dùng (Admin)
+export const updateUserByAdmin = async (
+  userId: string,
+  updatedData: {
+    name?: string;
+    email?: string;
+    phone?: string;
+    isAdmin?: boolean;
+  },
+  token: string
+) => {
+  try {
+    const response = await api.put(`/users/${userId}`, updatedData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data; // Trả về thông tin người dùng sau khi cập nhật
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message || "Cập nhật người dùng thất bại!"
+    );
+  }
+};
+
+// Xóa người dùng (Admin)
+export const deleteUser = async (userId: string, token: string) => {
+  try {
+    const response = await api.delete(`/users/${userId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data; // Trả về thông báo xóa người dùng thành công
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message || "Xóa người dùng thất bại!"
+    );
+  }
+};
+
+// Lấy thông tin người dùng theo ID (Admin)
+export const getUserById = async (userId: string, token: string) => {
+  try {
+    const response = await api.get(`/users/${userId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data; // Trả về thông tin người dùng
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message || "Lấy thông tin người dùng thất bại!"
+    );
+  }
+};
+export const searchUsers = async (query: string, token: string) => {
+  try {
+    const response = await api.get(`/users/search?query=${query}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data; // Trả về danh sách người dùng tìm được
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message || "Lỗi khi tìm kiếm người dùng!"
+    );
+  }
+};

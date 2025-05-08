@@ -1,4 +1,6 @@
 export interface ICategory {
-  _id: string; // ID của sản phẩm (ObjectId)
-  name: string; // Tên sản phẩm
+  _id: string;
+  name: string;
+  description: string;
+  image?: string; // Tùy chọn, vì có thể không có ảnh
 }

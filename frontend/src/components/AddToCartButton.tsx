@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { IProduct } from "../types/product";
-import { addToCart } from "../api/CartApi";
 import { toast } from "react-toastify";
 import { useAuth } from "../context/AuthContext";
+import { useCart } from "../context/CartContext";
 import { ShoppingCart, Check } from "lucide-react";
-import { useNavigate } from "react-router-dom"; // Import useNavigate
+import { useNavigate } from "react-router-dom";
 
 interface AddToCartButtonProps {
   product: IProduct;
@@ -20,18 +20,17 @@ export const AddToCartButton: React.FC<AddToCartButtonProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const { getToken } = useAuth();
-  const navigate = useNavigate(); // Sử dụng useNavigate để điều hướng
+  const { addToCart } = useCart();
+  const navigate = useNavigate();
 
   const handleAddToCart = async () => {
     const token = getToken();
-
-    // Nếu chưa đăng nhập, chuyển hướng đến trang /login
     if (!token) {
       toast.warning("Vui lòng đăng nhập để thêm vào giỏ hàng!", {
         position: "top-right",
         autoClose: 2000,
       });
-      navigate("/login"); // Chuyển hướng đến trang đăng nhập
+      navigate("/login");
       return;
     }
 
@@ -41,7 +40,7 @@ export const AddToCartButton: React.FC<AddToCartButtonProps> = ({
     setIsSuccess(false);
 
     try {
-      await addToCart(product._id, 1, token);
+      await addToCart(product._id, 1);
 
       setIsSuccess(true);
       setTimeout(() => setIsSuccess(false), 2000);

@@ -8,18 +8,18 @@ import { ICategory } from "../types/category";
 
 const images = [banner1, banner2, banner3];
 
-const categoryBrands: Record<string, string[]> = {
-  "Điện Thoại & Phụ Kiện": ["Iphone", "Samsung", "Xiaomi", "Oppo", "Vivo"],
-  "LapTop & Máy Tính": ["Dell", "HP", "Acer", "MacBook", "Asus"],
-  "Đồng Hồ": ["Rolex", "Omega", "Casio", "Seiko", "Citizen"],
-  Tivi: ["Samsung", "LG", "Sony", "TCL", "Hisense"],
-  "Các Phụ Kiện Khác": [
+const categoryBrandsById: Record<string, string[]> = {
+  "67e17dbc476cbfe4dc4dfe02": ["Iphone", "Samsung", "Xiaomi", "Oppo", "Vivo"], // Điện Thoại & Phụ Kiện
+  "67e17df8476cbfe4dc4dfe06": ["Dell", "HP", "Acer", "MacBook", "Asus"], // Laptop & Máy Tính
+  "67e17e9d476cbfe4dc4dfe0a": ["Rolex", "Omega", "Casio", "Seiko", "Citizen"], // Đồng Hồ
+  "67e17ea9476cbfe4dc4dfe0e": ["Samsung", "LG", "Sony", "TCL", "Hisense"], // Tivi
+  "67e17ed2476cbfe4dc4dfe12": [
     "Tai nghe",
     "Chuột",
     "Bàn phím",
     "Sạc dự phòng",
     "Ốp lưng",
-  ],
+  ], // Phụ kiện
 };
 
 const priceRanges = [
@@ -89,8 +89,8 @@ const Banner = () => {
     navigate(`/products/search?${searchParams.toString()}`);
   };
 
-  const getBrandsForCategory = (categoryName: string) => {
-    return categoryBrands[categoryName] || ["Không có hãng nào"];
+  const getBrandsForCategory = (categoryId: string) => {
+    return categoryBrandsById[categoryId] || ["Không có hãng nào"];
   };
 
   return (
@@ -148,7 +148,7 @@ const Banner = () => {
                     Hãng
                   </h4>
                   <ul className="space-y-2">
-                    {getBrandsForCategory(selectedCategory.name).map(
+                    {getBrandsForCategory(selectedCategory._id).map(
                       (brand, index) => (
                         <li
                           key={index}

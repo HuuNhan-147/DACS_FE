@@ -85,3 +85,100 @@ export const updateOrderPaymentStatus = async (
     );
   }
 };
+export const getOrderDetails = async (token: string, orderId: string) => {
+  try {
+    const response = await api.get(`/orders/${orderId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`, // Gửi token trong header
+      },
+    });
+    return response.data; // Trả về thông tin chi tiết của đơn hàng
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message ||
+        "Lỗi khi lấy thông tin chi tiết đơn hàng!"
+    );
+  }
+};
+export const updateOrderDeliveryStatus = async (
+  token: string,
+  orderId: string,
+  isDelivered: boolean
+) => {
+  try {
+    const response = await api.put(
+      `/orders/${orderId}/deliver`, // API path giả định cho cập nhật trạng thái giao hàng
+      { isDelivered },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`, // Gửi token trong header
+        },
+      }
+    );
+    return response.data; // Trả về phản hồi sau khi cập nhật trạng thái giao hàng
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message || "Lỗi khi cập nhật trạng thái giao hàng!"
+    );
+  }
+};
+export const getAllOrders = async (token: string) => {
+  try {
+    const response = await api.get("/orders", {
+      headers: {
+        Authorization: `Bearer ${token}`, // Gửi token trong header
+      },
+    });
+    return response.data; // Trả về danh sách tất cả các đơn hàng cho admin
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message || "Lỗi khi lấy danh sách tất cả đơn hàng!"
+    );
+  }
+};
+export const updateOrderStatus = async (
+  token: string,
+  orderId: string,
+  status: { isPaid: boolean; isDelivered: boolean }
+) => {
+  try {
+    const response = await api.put(
+      `/orders/${orderId}/status`, // API path giả định cho cập nhật trạng thái đơn hàng
+      status,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`, // Gửi token trong header
+        },
+      }
+    );
+    return response.data; // Trả về phản hồi sau khi cập nhật trạng thái đơn hàng
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message || "Lỗi khi cập nhật trạng thái đơn hàng!"
+    );
+  }
+};
+export const searchOrders = async (
+  token: string,
+  searchParams: {
+    paid?: boolean;
+    delivered?: boolean;
+    userName?: string;
+    startDate?: string;
+    endDate?: string;
+  }
+) => {
+  try {
+    const response = await api.get("/orders/search", {
+      headers: {
+        Authorization: `Bearer ${token}`, // Gửi token trong header
+      },
+      params: searchParams, // Gửi các tham số tìm kiếm dưới dạng query params
+    });
+    return response.data; // Trả về danh sách đơn hàng tìm kiếm
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message || "Lỗi khi tìm kiếm đơn hàng!"
+    );
+  }
+};

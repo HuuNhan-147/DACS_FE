@@ -5,23 +5,28 @@ import { ShoppingCart, ArrowLeft } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import CartItem from "../components/CartItem";
 import CartSummary from "../components/CartSummary";
-import { removeFromCart, updateCartItem } from "../api/CartApi";
+import { useCart } from "../context/CartContext";
 
 const CartPage = () => {
   const [cartData, setCartData] = useState<any | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+
   const { getToken } = useAuth();
   const navigate = useNavigate();
+  const { removeFromCart, updateQuantity } = useCart();
 
   const fetchCart = async () => {
     const token = getToken();
     if (!token) {
       setError("Vui lòng đăng nhập để xem giỏ hàng!");
+      setCartData(null);
       setLoading(false);
       return;
     }
 
+    setLoading(true);
+    setError(null);
     try {
       const response = await getCart(token);
       setCartData(response);
@@ -39,30 +44,50 @@ const CartPage = () => {
 
   useEffect(() => {
     fetchCart();
-  }, [getToken]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleRemoveItem = async (productId: string) => {
-    const token = getToken();
-    if (!token) return;
-
     try {
-      // Cập nhật trạng thái giỏ hàng ngay lập tức sau khi xóa sản phẩm
-      const updatedCartData = cartData.cart.cartItems.filter(
-        (item: any) => item.product._id !== productId
-      );
-      setCartData({
-        ...cartData,
-        cart: {
-          ...cartData.cart,
-          cartItems: updatedCartData,
-        },
-      });
+      // Gọi API để xóa sản phẩm khỏi giỏ hàng
+      await removeFromCart(productId);
 
-      // Gọi API xóa sản phẩm khỏi giỏ hàng
-      await removeFromCart(productId, token);
+      // Cập nhật giỏ hàng trong state sau khi xóa sản phẩm
+      if (cartData) {
+        // Tạo mảng giỏ hàng mới sau khi xóa sản phẩm
+        const updatedItems = cartData.cart.cartItems.filter(
+          (item: any) => item.product._id !== productId
+        );
 
-      // Sau khi xóa, gọi lại API để cập nhật giỏ hàng mới
-      fetchCart(); // Cập nhật lại giỏ hàng từ server để đảm bảo tính đồng bộ
+        // Tính tổng tiền của các sản phẩm còn lại trong giỏ hàng
+        const updatedItemsPrice = updatedItems.reduce(
+          (acc: number, item: any) => acc + item.product.price * item.quantity,
+          0
+        );
+
+        // Tính tiền ship: miễn phí nếu tổng tiền > 1 triệu
+        const updatedShippingPrice = 30000;
+
+        // Tính thuế 10%
+        const updatedTaxPrice = updatedItemsPrice * 0.1;
+
+        // Tính tổng tiền sau thuế và ship
+        const updatedTotalPrice =
+          updatedItemsPrice + updatedShippingPrice + updatedTaxPrice;
+
+        // Cập nhật lại giỏ hàng trong state và tính lại tổng tiền
+        setCartData({
+          ...cartData,
+          cart: {
+            ...cartData.cart,
+            cartItems: updatedItems,
+          },
+          itemsPrice: updatedItemsPrice,
+          shippingPrice: updatedShippingPrice,
+          taxPrice: updatedTaxPrice,
+          totalPrice: updatedTotalPrice,
+        });
+      }
     } catch (error) {
       console.error("Lỗi khi xóa sản phẩm:", error);
       setError("Không thể xóa sản phẩm.");
@@ -74,15 +99,53 @@ const CartPage = () => {
     newQuantity: number
   ) => {
     if (newQuantity < 1) return;
-
-    const token = getToken();
-    if (!token) return;
-
     try {
-      await updateCartItem(productId, newQuantity, token);
-      fetchCart();
+      await updateQuantity(productId, newQuantity);
+
+      if (cartData) {
+        // Cập nhật số lượng mới trong giỏ hàng
+        const updatedItems = cartData.cart.cartItems.map((item: any) => {
+          if (item.product._id === productId) {
+            return {
+              ...item,
+              quantity: newQuantity,
+            };
+          }
+          return item;
+        });
+
+        // Tính tổng tiền của các sản phẩm
+        const updatedItemsPrice = updatedItems.reduce(
+          (acc: number, item: any) => acc + item.product.price * item.quantity,
+          0
+        );
+
+        // Tính tiền ship: miễn phí nếu tổng tiền > 1 triệu
+        const updatedShippingPrice = 30000;
+
+        // Tính thuế 10%
+        const updatedTaxPrice = updatedItemsPrice * 0.1;
+
+        // Tính tổng tiền sau thuế và ship
+        const updatedTotalPrice =
+          updatedItemsPrice + updatedShippingPrice + updatedTaxPrice;
+
+        // Cập nhật lại dữ liệu trong state
+        setCartData({
+          ...cartData,
+          cart: {
+            ...cartData.cart,
+            cartItems: updatedItems,
+          },
+          itemsPrice: updatedItemsPrice,
+          shippingPrice: updatedShippingPrice,
+          taxPrice: updatedTaxPrice,
+          totalPrice: updatedTotalPrice,
+        });
+      }
     } catch (error) {
       console.error("Lỗi khi cập nhật số lượng:", error);
+      setError("Không thể cập nhật số lượng sản phẩm.");
     }
   };
 
@@ -127,12 +190,12 @@ const CartPage = () => {
     );
   }
 
-  if (!cartData || cartData.cart.cartItems.length === 0) {
+  if (error || !cartData || cartData.cart.cartItems.length === 0) {
     return (
       <div className="text-center py-12">
         <ShoppingCart className="mx-auto h-16 w-16 text-gray-400 mb-4" />
         <h2 className="text-xl font-medium text-gray-900 mb-2">
-          Giỏ hàng của bạn đang trống
+          {error || "Giỏ hàng của bạn đang trống"}
         </h2>
         <p className="text-gray-600 mb-6">
           Hãy khám phá cửa hàng và thêm sản phẩm vào giỏ hàng!

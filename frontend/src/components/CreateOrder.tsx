@@ -353,16 +353,56 @@ const CreateOrderPage: React.FC = () => {
                 <div className="flex justify-between text-base font-medium text-gray-900">
                   <p>Tổng cộng</p>
                   <p>
-                    {(product
-                      ? product.price
-                      : products.reduce(
-                          (sum, prod) => sum + prod.price * prod.quantity,
-                          0
-                        )
+                    {/* Tính tổng tiền của sản phẩm */}
+                    {products
+                      .reduce(
+                        (sum, prod) => sum + prod.price * prod.quantity,
+                        0
+                      )
+                      .toLocaleString("vi-VN")}{" "}
+                    VND
+                  </p>
+                </div>
+
+                {/* Tính tiền ship (ví dụ cố định là 30,000 VND) */}
+                <div className="flex justify-between text-base font-medium text-gray-900 mt-2">
+                  <p>Phí vận chuyển</p>
+                  <p>{(30000).toLocaleString("vi-VN")} VND</p>
+                </div>
+
+                {/* Tính thuế 10% */}
+                <div className="flex justify-between text-base font-medium text-gray-900 mt-2">
+                  <p>Thuế 10%</p>
+                  <p>
+                    {(
+                      products.reduce(
+                        (sum, prod) => sum + prod.price * prod.quantity,
+                        0
+                      ) * 0.1
                     ).toLocaleString("vi-VN")}{" "}
                     VND
                   </p>
                 </div>
+              </div>
+              {/* Tính tổng tiền sau thuế và phí ship */}
+              <div className="flex justify-between text-lg font-bold text-gray-900 mt-4">
+                <p>Tổng tiền (Sau thuế và phí ship)</p>
+                <p>
+                  {(
+                    products.reduce(
+                      (sum, prod) => sum + prod.price * prod.quantity,
+                      0
+                    ) +
+                    30000 + // Phí ship
+                    products.reduce(
+                      (sum, prod) => sum + prod.price * prod.quantity,
+                      0
+                    ) *
+                      0.1
+                  ) // Thuế 10%
+                    .toLocaleString("vi-VN")}{" "}
+                  VND
+                </p>
               </div>
             </div>
 

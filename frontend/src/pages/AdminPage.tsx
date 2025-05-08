@@ -1,11 +1,11 @@
 import React from "react";
-import AdminProductList from "../admincomponents/AdminProductList";
+import Dashboard from "../admincomponents/Dashboard";
 // Import your admin products component
 const AdminPage = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <main className="flex-grow">
-        <AdminProductList />
+        <Dashboard />
       </main>
     </div>
   );

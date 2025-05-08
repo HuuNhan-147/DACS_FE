@@ -101,18 +101,18 @@ export const addProduct = async (productData: FormData, token: string) => {
 
 export const updateProduct = async (
   productId: string,
-  productData: IProduct,
+  productData: FormData, // Đảm bảo productData là FormData
   token: string
 ) => {
   try {
-    // Gửi yêu cầu PUT để sửa sản phẩm theo ID
     const response = await api.put(`/products/${productId}`, productData, {
       headers: {
-        Authorization: `Bearer ${token}`, // Gửi token trong header Authorization
+        "Content-Type": "multipart/form-data", // Đảm bảo đúng Content-Type cho FormData
+        Authorization: `Bearer ${token}`,
       },
     });
 
-    return response.data; // Trả về phản hồi từ API, có thể là thông báo thành công hoặc dữ liệu sản phẩm đã sửa
+    return response.data; // Trả về phản hồi từ API
   } catch (error) {
     console.error("Lỗi khi sửa sản phẩm:", error);
     throw error; // Ném lỗi nếu có

@@ -74,3 +74,18 @@ export const updateCartItem = async (
     );
   }
 };
+export const getCartItemCount = async (token: string) => {
+  try {
+    const response = await api.get("/cart/count", {
+      headers: {
+        Authorization: `Bearer ${token}`, // Gửi token trong header để xác thực
+      },
+    });
+    return response.data; // Trả về dữ liệu số lượng sản phẩm trong giỏ
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message ||
+        "Không thể lấy số lượng sản phẩm trong giỏ hàng!"
+    );
+  }
+};
