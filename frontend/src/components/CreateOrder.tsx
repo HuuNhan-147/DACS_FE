@@ -22,7 +22,6 @@ const CreateOrderPage: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { getToken } = useAuth();
-
   const [orderData, setOrderData] = useState<IOrderData>({
     shippingAddress: {
       fullname: "",
@@ -42,14 +41,33 @@ const CreateOrderPage: React.FC = () => {
 
   useEffect(() => {
     if (location.state?.products) {
-      setProducts(location.state.products);
+      // Trường hợp từ giỏ hàng
+      const updatedProducts = location.state.products.map((p) => ({
+        ...p,
+        quantity: p.quantity || 1, // đảm bảo có quantity
+      }));
+      setProducts(updatedProducts);
     } else if (location.state?.product) {
-      setProduct(location.state.product);
+      // Trường hợp "Mua ngay"
+      const singleProduct = {
+        ...location.state.product,
+        quantity: location.state.product.quantity || 1,
+      };
+      setProducts([singleProduct]); // luôn chuyển thành mảng
     } else {
       navigate("/products");
     }
   }, [location, navigate]);
+  const SHIPPING_FEE = 30000;
+  const TAX_RATE = 0.1;
 
+  const subtotal = products.reduce(
+    (sum, prod) => sum + prod.price * prod.quantity,
+    0
+  );
+
+  const tax = subtotal * TAX_RATE;
+  const total = subtotal + SHIPPING_FEE + tax;
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setOrderData((prev) => ({
@@ -347,62 +365,31 @@ const CreateOrderPage: React.FC = () => {
                   ))
                 )}
               </div>
-
-              {/* Total */}
-              <div className="mt-6 border-t border-gray-200 pt-4">
-                <div className="flex justify-between text-base font-medium text-gray-900">
-                  <p>Tổng cộng</p>
-                  <p>
-                    {/* Tính tổng tiền của sản phẩm */}
-                    {products
-                      .reduce(
-                        (sum, prod) => sum + prod.price * prod.quantity,
-                        0
-                      )
-                      .toLocaleString("vi-VN")}{" "}
-                    VND
-                  </p>
-                </div>
-
-                {/* Tính tiền ship (ví dụ cố định là 30,000 VND) */}
-                <div className="flex justify-between text-base font-medium text-gray-900 mt-2">
-                  <p>Phí vận chuyển</p>
-                  <p>{(30000).toLocaleString("vi-VN")} VND</p>
-                </div>
-
-                {/* Tính thuế 10% */}
-                <div className="flex justify-between text-base font-medium text-gray-900 mt-2">
-                  <p>Thuế 10%</p>
-                  <p>
-                    {(
-                      products.reduce(
-                        (sum, prod) => sum + prod.price * prod.quantity,
-                        0
-                      ) * 0.1
-                    ).toLocaleString("vi-VN")}{" "}
-                    VND
-                  </p>
-                </div>
+            </div>
+            {/* Total */}
+            <div className="mt-6 border-t border-gray-200 pt-4">
+              {/* Tổng cộng */}
+              <div className="flex justify-between text-base font-medium text-gray-900">
+                <p>Tổng cộng</p>
+                <p>{subtotal.toLocaleString("vi-VN")} VND</p>
               </div>
-              {/* Tính tổng tiền sau thuế và phí ship */}
+
+              {/* Phí vận chuyển */}
+              <div className="flex justify-between text-base font-medium text-gray-900 mt-2">
+                <p>Phí vận chuyển</p>
+                <p>{SHIPPING_FEE.toLocaleString("vi-VN")} VND</p>
+              </div>
+
+              {/* Thuế */}
+              <div className="flex justify-between text-base font-medium text-gray-900 mt-2">
+                <p>Thuế 10%</p>
+                <p>{tax.toLocaleString("vi-VN")} VND</p>
+              </div>
+
+              {/* Tổng tiền sau thuế và phí */}
               <div className="flex justify-between text-lg font-bold text-gray-900 mt-4">
                 <p>Tổng tiền (Sau thuế và phí ship)</p>
-                <p>
-                  {(
-                    products.reduce(
-                      (sum, prod) => sum + prod.price * prod.quantity,
-                      0
-                    ) +
-                    30000 + // Phí ship
-                    products.reduce(
-                      (sum, prod) => sum + prod.price * prod.quantity,
-                      0
-                    ) *
-                      0.1
-                  ) // Thuế 10%
-                    .toLocaleString("vi-VN")}{" "}
-                  VND
-                </p>
+                <p>{total.toLocaleString("vi-VN")} VND</p>
               </div>
             </div>
 

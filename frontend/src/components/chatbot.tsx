@@ -1,5 +1,9 @@
 import { useState, useRef, useEffect } from "react";
-import { fetchChatbotResponse } from "../api/productApi";
+import {
+  fetchChatbotResponse,
+  fetchAdminChatbotResponse,
+} from "../api/productApi";
+import { useAuth } from "../context/AuthContext";
 import React from "react";
 
 interface Message {
@@ -15,7 +19,7 @@ const Chatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
+  const { user, token } = useAuth();
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -37,7 +41,25 @@ const Chatbot = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetchChatbotResponse(userInput);
+      let response = "";
+
+      if (user && user.isAdmin) {
+        if (!token) {
+          setMessages((prev) => [
+            ...prev,
+            {
+              content: "Bạn cần đăng nhập để sử dụng chatbot admin.",
+              isUser: false,
+            },
+          ]);
+          setIsLoading(false);
+          return;
+        }
+        response = await fetchAdminChatbotResponse(userInput, token);
+      } else {
+        response = await fetchChatbotResponse(userInput);
+      }
+
       const botMessage: Message = {
         content: response,
         isUser: false,

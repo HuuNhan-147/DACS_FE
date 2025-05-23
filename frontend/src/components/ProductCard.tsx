@@ -30,24 +30,40 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
   const handleBuyNow = () => {
     const token = getToken(); // Lấy token từ context Auth
+
+    console.log("🔐 Token hiện tại:", token);
     if (!token) {
-      // Nếu không có token (chưa đăng nhập), điều hướng đến trang login
+      console.warn("⚠️ Người dùng chưa đăng nhập. Chuyển hướng đến /login");
       navigate("/login");
       return;
     }
 
-    // Nếu đã đăng nhập, điều hướng đến trang order kèm theo thông tin sản phẩm và phí vận chuyển
+    console.log("🛒 Thông tin sản phẩm sẽ mua:", product);
+    console.log("🚚 Phí vận chuyển:", shippingPrice);
+
     navigate("/create", {
       state: {
         product,
-        shippingPrice, // Gửi phí vận chuyển cùng với sản phẩm
+        shippingPrice,
       },
     });
   };
 
   const handleImageClick = () => {
-    // Điều hướng đến trang chi tiết sản phẩm
-    navigate(`/products/${product._id}`);
+    // Loại bỏ http://localhost:5000 nếu có
+    const cleanedImage =
+      product.image?.replace("http://localhost:5000", "") || product.image;
+
+    // Tạo bản sao của product với image đã xử lý
+    const productWithoutBaseUrl = {
+      ...product,
+      image: cleanedImage,
+    };
+
+    // Điều hướng sang trang chi tiết, truyền product (đã làm sạch URL ảnh)
+    navigate(`/products/${product._id}`, {
+      state: { product: productWithoutBaseUrl },
+    });
   };
 
   const imageUrl = product.image

@@ -1,6 +1,6 @@
-import React, { useState,useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { User, LogOut,ShieldCheck } from "lucide-react";
+import { User, LogOut, ShieldCheck } from "lucide-react";
 import UserProfile from "./UserProfile";
 import LoginPrompt from "./LoginPrompt";
 import { User as UserType } from "../../types/User";
@@ -9,12 +9,14 @@ interface AuthButtonsProps {
   user: UserType | null;
   token: string | null;
   onAutoLogout: (message: string) => void;
+  onProfileUpdated: () => void;
 }
 
 const AuthButtons: React.FC<AuthButtonsProps> = ({
   user,
   token,
   onAutoLogout,
+  onProfileUpdated, // ✅ Thêm dòng này
 }) => {
   const [showProfile, setShowProfile] = useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
@@ -78,6 +80,7 @@ const AuthButtons: React.FC<AuthButtonsProps> = ({
           showProfile={showProfile}
           onToggleProfile={handleToggleProfile}
           onAutoLogout={onAutoLogout}
+          onProfileUpdated={onProfileUpdated}
         />
       </div>
     );

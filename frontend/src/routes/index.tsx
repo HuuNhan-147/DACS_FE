@@ -25,6 +25,8 @@ import { CartProvider } from "../context/CartContext";
 import CategoryManagement from "../admincomponents/CategoryManagement";
 import AdminUserManagement from "../admincomponents/AdminUserManagement";
 import AdminOrderManager from "../admincomponents/AdminOrderManager";
+import OrderDetails from "../admincomponents/OrderDetails";
+import SearchProduct from "../admincomponents/SearchProduct";
 const AppRoutes = () => {
   return (
     <AuthProvider>
@@ -81,6 +83,11 @@ const AppRoutes = () => {
                     />
                     <Route path="/users" element={<AdminUserManagement />} />
                     <Route path="/orders" element={<AdminOrderManager />} />
+                    <Route path="/orders/:id" element={<OrderDetails />} />
+                    <Route
+                      path="/products/search"
+                      element={<SearchProduct />}
+                    />
                   </Routes>
                   <Chatbot />
                 </AdminLayout>

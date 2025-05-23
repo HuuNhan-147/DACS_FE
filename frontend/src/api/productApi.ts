@@ -18,6 +18,28 @@ export const fetchChatbotResponse = async (question) => {
     throw error;
   }
 };
+// Gọi API chatbot admin, cần truyền token để xác thực admin
+export const fetchAdminChatbotResponse = async (
+  question: string,
+  token: string
+) => {
+  try {
+    const response = await api.post(
+      "/admin-chatbot", // Giả sử backend bạn có route /chatbot/admin
+      { question },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`, // Token admin trong header
+        },
+      }
+    );
+    return response.data.response; // Phản hồi từ backend (HTML hoặc text)
+  } catch (error) {
+    console.error("Lỗi khi gọi API chatbot admin:", error);
+    throw error;
+  }
+};
+
 export const fetchProductDetails = async (productId: string) => {
   try {
     const response = await api.get(`/products/${productId}`); // Gọi API lấy chi tiết sản phẩm theo ID

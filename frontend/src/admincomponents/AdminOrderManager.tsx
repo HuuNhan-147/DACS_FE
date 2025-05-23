@@ -1,15 +1,16 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   getAllOrders,
-  getOrderDetails,
   updateOrderPaymentStatus,
   updateOrderDeliveryStatus,
   cancelOrder,
   searchOrders,
-} from "../api/orderApi"; // Cập nhật theo dự án
+} from "../api/OrderApi";
 
 interface Order {
   _id: string;
+  orderCode: string; // 👈 THÊM DÒNG NÀY
   user: { name: string; email: string };
   totalPrice: number;
   isPaid: boolean;
@@ -21,10 +22,9 @@ const AdminOrderManager: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
   const [token, setToken] = useState<string>("");
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [detailData, setDetailData] = useState<any>(null);
-  const [showModal, setShowModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState<string>("");
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -45,53 +45,28 @@ const AdminOrderManager: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (searchQuery) {
-      const fetchSearchResults = async () => {
-        try {
-          setLoading(true);
-          // Cập nhật searchQuery thành đối tượng tìm kiếm
-          const searchParams = {
-            userName: searchQuery, // Hoặc bất kỳ thông tin nào bạn muốn tìm kiếm
-          };
-          const results = await searchOrders(token, searchParams); // Truyền đối tượng vào API
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        if (searchQuery) {
+          const results = await searchOrders(token, { userName: searchQuery });
           setOrders(results);
-        } catch (err) {
-          console.error("Lỗi khi tìm kiếm đơn hàng:", err);
-        } finally {
-          setLoading(false);
-        }
-      };
-      fetchSearchResults();
-    } else {
-      // Nếu không có tìm kiếm, lấy lại tất cả đơn hàng
-      const fetchOrders = async () => {
-        try {
-          setLoading(true);
-          const tokenFromStorage = localStorage.getItem("token") || "";
-          setToken(tokenFromStorage);
-          const data = await getAllOrders(tokenFromStorage);
+        } else {
+          const data = await getAllOrders(token);
           setOrders(data);
-        } catch (err) {
-          console.error("Lỗi khi load đơn hàng:", err);
-        } finally {
-          setLoading(false);
         }
-      };
+      } catch (err) {
+        console.error("Lỗi khi tìm kiếm đơn hàng:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-      fetchOrders();
-    }
+    fetchData();
   }, [searchQuery, token]);
 
-  const handleViewDetails = async (orderId: string) => {
-    try {
-      const details = await getOrderDetails(token, orderId);
-      setDetailData(details);
-      const order = orders.find((o) => o._id === orderId) || null;
-      setSelectedOrder(order);
-      setShowModal(true);
-    } catch (err) {
-      console.error("Lỗi khi lấy chi tiết đơn hàng:", err);
-    }
+  const handleViewDetails = (orderId: string) => {
+    navigate(`/admin/orders/${orderId}`);
   };
 
   const handleCancelOrder = async (orderId: string) => {
@@ -124,12 +99,6 @@ const AdminOrderManager: React.FC = () => {
     } catch (err) {
       console.error("Lỗi khi cập nhật giao hàng:", err);
     }
-  };
-
-  const closeModal = () => {
-    setShowModal(false);
-    setSelectedOrder(null);
-    setDetailData(null);
   };
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -169,7 +138,7 @@ const AdminOrderManager: React.FC = () => {
           <tbody>
             {orders.map((order) => (
               <tr key={order._id}>
-                <td className="p-2 border">{order._id.slice(0, 6)}...</td>
+                <td className="p-2 border">{order.orderCode}</td>
                 <td className="p-2">
                   {order.user ? order.user.name : "Không xác định"}
                 </td>
@@ -205,7 +174,7 @@ const AdminOrderManager: React.FC = () => {
                 </td>
                 <td className="p-2 border">
                   <button
-                    className="bg-gray-700 text-white px-2 py-1 rounded text-xs"
+                    className="bg-gray-700 text-white px-2 py-1 rounded text-xs mr-1"
                     onClick={() => handleViewDetails(order._id)}
                   >
                     Xem chi tiết
@@ -221,52 +190,6 @@ const AdminOrderManager: React.FC = () => {
             ))}
           </tbody>
         </table>
-      )}
-
-      {/* Modal Chi tiết đơn hàng */}
-      {showModal && detailData && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-[90%] max-w-lg relative">
-            <h2 className="text-lg font-semibold mb-4">Chi tiết đơn hàng</h2>
-            <button
-              className="absolute top-2 right-2 text-gray-600 hover:text-black"
-              onClick={closeModal}
-            >
-              &times;
-            </button>
-
-            <div className="space-y-2 text-sm">
-              <p>
-                <strong>ID:</strong> {detailData._id}
-              </p>
-              <p>
-                <strong>Người đặt:</strong> {detailData.user?.name}
-              </p>
-              <p>
-                <strong>Sản phẩm:</strong>
-              </p>
-              <ul className="list-disc list-inside ml-4">
-                {detailData.orderItems?.map((item: any, idx: number) => (
-                  <li key={idx}>
-                    {item.name} x {item.qty} - {item.price.toLocaleString()}đ
-                  </li>
-                ))}
-              </ul>
-              <p>
-                <strong>Tổng tiền:</strong>{" "}
-                {typeof detailData.totalPrice === "number"
-                  ? detailData.totalPrice.toLocaleString()
-                  : "Không xác định"}{" "}
-                đ
-              </p>
-              <p>
-                <strong>Trạng thái:</strong>
-                {detailData.isPaid ? " Đã thanh toán" : " Chưa thanh toán"} /
-                {detailData.isDelivered ? " Đã giao" : " Chưa giao"}
-              </p>
-            </div>
-          </div>
-        </div>
       )}
     </div>
   );

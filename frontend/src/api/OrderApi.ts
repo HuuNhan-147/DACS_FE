@@ -85,21 +85,7 @@ export const updateOrderPaymentStatus = async (
     );
   }
 };
-export const getOrderDetails = async (token: string, orderId: string) => {
-  try {
-    const response = await api.get(`/orders/${orderId}`, {
-      headers: {
-        Authorization: `Bearer ${token}`, // Gửi token trong header
-      },
-    });
-    return response.data; // Trả về thông tin chi tiết của đơn hàng
-  } catch (error: any) {
-    throw new Error(
-      error.response?.data?.message ||
-        "Lỗi khi lấy thông tin chi tiết đơn hàng!"
-    );
-  }
-};
+
 export const updateOrderDeliveryStatus = async (
   token: string,
   orderId: string,
@@ -119,6 +105,21 @@ export const updateOrderDeliveryStatus = async (
   } catch (error: any) {
     throw new Error(
       error.response?.data?.message || "Lỗi khi cập nhật trạng thái giao hàng!"
+    );
+  }
+};
+export const getOrderDetails = async (token: string, orderId: string) => {
+  try {
+    const response = await api.get(`/orders/${orderId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`, // Gửi token trong header
+      },
+    });
+    return response.data; // Trả về thông tin chi tiết của đơn hàng
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message ||
+        "Lỗi khi lấy thông tin chi tiết đơn hàng!"
     );
   }
 };

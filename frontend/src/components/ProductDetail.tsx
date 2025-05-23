@@ -132,10 +132,19 @@ const ProductDetail: React.FC = () => {
   )?.name;
 
   const handleBuyNow = () => {
+    if (!token) {
+      alert("Vui lòng đăng nhập để mua hàng.");
+      navigate("/login");
+      return;
+    }
+
     if (product) {
+      console.log("Thông tin sản phẩm được truyền:", product); // ✅ Debug thông tin sản phẩm
       navigate("/create", {
         state: { product },
       });
+    } else {
+      console.warn("Không có sản phẩm để mua."); // 🟡 Thông báo nếu product null
     }
   };
   const handleImageLoad = () => {

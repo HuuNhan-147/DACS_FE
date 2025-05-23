@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 
 interface MainNavProps {
   onViewProducts: () => void;
+  onProfileUpdated: () => void;
 }
 
 const MainNav: React.FC<MainNavProps> = ({ onViewProducts }) => {

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { SlidersHorizontal, RefreshCcw } from "lucide-react";
 import { fetchCategory } from "../api/CategoryApi"; // Import API lấy danh mục
 import { ICategory } from "../types/category"; // Import kiểu danh mục
-
+import { useAuth } from "../context/AuthContext"; // đường dẫn tới context của bạn
 const SearchFilter = ({ initialValues }) => {
   const [filters, setFilters] = useState({
     keyword: initialValues.keyword || "",
@@ -16,7 +16,8 @@ const SearchFilter = ({ initialValues }) => {
 
   const [categories, setCategories] = useState<ICategory[]>([]); // Lưu danh mục từ API
   const navigate = useNavigate();
-
+  const { user } = useAuth();
+  const isAdmin = user?.isAdmin;
   // Gọi API lấy danh mục
   useEffect(() => {
     const loadCategories = async () => {
@@ -38,16 +39,22 @@ const SearchFilter = ({ initialValues }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     const queryParams = new URLSearchParams();
-
+  
     if (filters.keyword) queryParams.append("keyword", filters.keyword);
     if (filters.category) queryParams.append("category", filters.category);
     if (filters.minPrice) queryParams.append("minPrice", filters.minPrice);
     if (filters.maxPrice) queryParams.append("maxPrice", filters.maxPrice);
     if (filters.rating) queryParams.append("rating", filters.rating);
     if (filters.sortBy) queryParams.append("sortBy", filters.sortBy);
-
-    navigate(`/products/search?${queryParams.toString()}`);
+  
+    // Nếu là admin thì chuyển hướng tới trang admin
+    if (isAdmin) {
+      navigate(`/admin/products/search?${queryParams.toString()}`);
+    } else {
+      navigate(`/products/search?${queryParams.toString()}`);
+    }
   };
+  
 
   const handleReset = () => {
     setFilters({
