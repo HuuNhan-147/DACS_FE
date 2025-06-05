@@ -190,3 +190,17 @@ export const searchUsers = async (query: string, token: string) => {
     );
   }
 };
+export const getUserProfile = async (token: string) => {
+  try {
+    const response = await api.get("/users/profile", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data; // Trả về thông tin người dùng
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message || "Không thể lấy thông tin người dùng!"
+    );
+  }
+};

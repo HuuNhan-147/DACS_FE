@@ -1,30 +1,55 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Edit, X, ShieldCheck } from "lucide-react";
-import { updateUserProfile } from "../../api/UserApi";
+import { Edit, X } from "lucide-react";
+import { getUserProfile, updateUserProfile } from "../../api/UserApi";
 import { User as UserType } from "../../types/User";
 
 interface UserProfileProps {
-  user: UserType;
   token: string | null;
   showProfile: boolean;
   onToggleProfile: () => void;
   onAutoLogout: (message: string) => void;
+  onUpdateUser: (newUser: UserType) => void; // thêm vào đây
 }
 
 const UserProfile: React.FC<UserProfileProps> = ({
-  user,
   token,
   showProfile,
   onToggleProfile,
   onAutoLogout,
+  onUpdateUser,
 }) => {
+  const [user, setUser] = useState<UserType | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [profileData, setProfileData] = useState({
-    name: user?.name || "",
-    phone: user?.phone || "",
-  });
+  const [profileData, setProfileData] = useState({ name: "", phone: "" });
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      if (!token) {
+        onAutoLogout("Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại.");
+        return;
+      }
+
+      try {
+        const userData = await getUserProfile(token);
+        setUser(userData);
+        setProfileData({
+          name: userData.name || "",
+          phone: userData.phone || "",
+        });
+      } catch (error) {
+        console.error("Lỗi khi lấy thông tin người dùng:", error);
+        onAutoLogout(
+          "Không thể lấy thông tin người dùng. Vui lòng đăng nhập lại."
+        );
+      }
+    };
+
+    if (showProfile) {
+      fetchUser();
+    }
+  }, [showProfile, token, onAutoLogout]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -41,13 +66,17 @@ const UserProfile: React.FC<UserProfileProps> = ({
       await updateUserProfile(profileData, token);
       alert("Cập nhật thông tin thành công!");
       setIsEditing(false);
+      // Làm mới lại dữ liệu sau khi cập nhật
+      const updatedUser = await getUserProfile(token);
+      setUser(updatedUser);
+      onUpdateUser(updatedUser);
     } catch (error) {
       console.error("Lỗi khi cập nhật thông tin người dùng:", error);
       alert("Cập nhật thông tin thất bại. Vui lòng thử lại sau.");
     }
   };
 
-  if (!showProfile) return null;
+  if (!showProfile || !user) return null;
 
   return (
     <div className="absolute right-0 top-12 bg-white rounded-lg shadow-xl overflow-hidden w-72 z-50 border border-gray-200">
@@ -63,6 +92,7 @@ const UserProfile: React.FC<UserProfileProps> = ({
 
       <div className="p-4">
         {isEditing ? (
+          // === FORM EDIT ===
           <div className="space-y-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -73,7 +103,7 @@ const UserProfile: React.FC<UserProfileProps> = ({
                 name="name"
                 value={profileData.name}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500"
               />
             </div>
             <div>
@@ -96,26 +126,26 @@ const UserProfile: React.FC<UserProfileProps> = ({
                 name="phone"
                 value={profileData.phone}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500"
               />
             </div>
-
             <div className="flex justify-end space-x-2 pt-2">
               <button
                 onClick={() => setIsEditing(false)}
-                className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition"
+                className="text-sm text-gray-700 px-4 py-2 rounded-md hover:bg-gray-100"
               >
                 Hủy
               </button>
               <button
                 onClick={handleSaveProfile}
-                className="px-4 py-2 text-sm bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition"
+                className="text-sm bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700"
               >
                 Lưu thay đổi
               </button>
             </div>
           </div>
         ) : (
+          // === THÔNG TIN NGƯỜI DÙNG ===
           <div className="space-y-3">
             <div className="flex items-center space-x-3">
               <div className="h-12 w-12 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-xl">
@@ -145,7 +175,7 @@ const UserProfile: React.FC<UserProfileProps> = ({
             <div className="border-t border-gray-200 pt-3 mt-3">
               <button
                 onClick={() => navigate("/change-password")}
-                className="w-full flex items-center justify-center px-3 py-2 text-sm bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition"
+                className="w-full flex items-center justify-center px-3 py-2 text-sm bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -165,7 +195,7 @@ const UserProfile: React.FC<UserProfileProps> = ({
             <div className="flex justify-end pt-2">
               <button
                 onClick={() => setIsEditing(true)}
-                className="flex items-center px-3 py-1 text-sm bg-indigo-50 text-indigo-600 rounded-md hover:bg-indigo-100 transition"
+                className="flex items-center px-3 py-1 text-sm bg-indigo-50 text-indigo-600 rounded-md hover:bg-indigo-100"
               >
                 <Edit className="h-4 w-4 mr-1" />
                 Cập nhật

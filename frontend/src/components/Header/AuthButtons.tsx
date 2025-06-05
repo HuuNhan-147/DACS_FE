@@ -19,7 +19,7 @@ const AuthButtons: React.FC<AuthButtonsProps> = ({
   const [showProfile, setShowProfile] = useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const navigate = useNavigate();
-
+  const [updatedUser, setUpdatedUser] = useState<UserType | null>(user);
   const handleLogout = () => {
     if (window.confirm("Bạn có chắc chắn muốn đăng xuất không?")) {
       onAutoLogout("Bạn đã đăng xuất thành công!");
@@ -29,7 +29,9 @@ const AuthButtons: React.FC<AuthButtonsProps> = ({
   const handleToggleProfile = () => {
     setShowProfile(!showProfile);
   };
-
+useEffect(() => {
+  setUpdatedUser(user);
+}, [user]);
   useEffect(() => {
     if (user) return;
 
@@ -49,9 +51,9 @@ const AuthButtons: React.FC<AuthButtonsProps> = ({
           className="text-lg text-white hover:text-gray-200 font-medium transition flex items-center"
         >
           <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white mr-2">
-            {user.name?.charAt(0).toUpperCase()}
+            {updatedUser?.name?.charAt(0).toUpperCase()}
           </div>
-          {user.name}
+          {updatedUser?.name}
         </button>
 
         {user.isAdmin && (
@@ -73,11 +75,11 @@ const AuthButtons: React.FC<AuthButtonsProps> = ({
         </button>
 
         <UserProfile
-          user={user}
           token={token}
           showProfile={showProfile}
           onToggleProfile={handleToggleProfile}
           onAutoLogout={onAutoLogout}
+          onUpdateUser={(newUser) => setUpdatedUser(newUser)} // ← truyền hàm cập nhật
         />
       </div>
     );
