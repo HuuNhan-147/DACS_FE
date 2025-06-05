@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Edit, X, ShieldCheck } from "lucide-react";
-import { updateUserProfile  } from "../../api/UserApi";
+import { updateUserProfile } from "../../api/UserApi";
 import { User as UserType } from "../../types/User";
 
 interface UserProfileProps {
@@ -10,7 +10,6 @@ interface UserProfileProps {
   showProfile: boolean;
   onToggleProfile: () => void;
   onAutoLogout: (message: string) => void;
-  onProfileUpdated: () => void; 
 }
 
 const UserProfile: React.FC<UserProfileProps> = ({
@@ -19,7 +18,6 @@ const UserProfile: React.FC<UserProfileProps> = ({
   showProfile,
   onToggleProfile,
   onAutoLogout,
-  onProfileUpdated
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [profileData, setProfileData] = useState({
@@ -43,8 +41,6 @@ const UserProfile: React.FC<UserProfileProps> = ({
       await updateUserProfile(profileData, token);
       alert("Cập nhật thông tin thành công!");
       setIsEditing(false);
-      onProfileUpdated();
-      
     } catch (error) {
       console.error("Lỗi khi cập nhật thông tin người dùng:", error);
       alert("Cập nhật thông tin thất bại. Vui lòng thử lại sau.");

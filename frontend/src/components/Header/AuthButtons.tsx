@@ -9,14 +9,12 @@ interface AuthButtonsProps {
   user: UserType | null;
   token: string | null;
   onAutoLogout: (message: string) => void;
-  onProfileUpdated: () => void;
 }
 
 const AuthButtons: React.FC<AuthButtonsProps> = ({
   user,
   token,
   onAutoLogout,
-  onProfileUpdated, // ✅ Thêm dòng này
 }) => {
   const [showProfile, setShowProfile] = useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
@@ -80,7 +78,6 @@ const AuthButtons: React.FC<AuthButtonsProps> = ({
           showProfile={showProfile}
           onToggleProfile={handleToggleProfile}
           onAutoLogout={onAutoLogout}
-          onProfileUpdated={onProfileUpdated}
         />
       </div>
     );

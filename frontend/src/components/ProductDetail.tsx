@@ -37,7 +37,15 @@ const ProductDetail: React.FC = () => {
 
     const getProductDetail = async () => {
       if (passedProduct) {
-        setProduct(passedProduct); // 👈 nếu có product được truyền từ ProductCard
+        const updatedProduct = {
+          ...passedProduct,
+          image: passedProduct.image.startsWith("http")
+            ? passedProduct.image
+            : `http://localhost:5000${passedProduct.image}`,
+        };
+
+        console.log("✅ Sản phẩm được truyền từ ProductCard:", updatedProduct);
+        setProduct(updatedProduct);
         setLoading(false);
         return;
       }

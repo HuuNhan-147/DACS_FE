@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import {
   getAllOrders,
@@ -6,11 +7,12 @@ import {
   updateOrderDeliveryStatus,
   cancelOrder,
   searchOrders,
+  searchOrdersByUserName,
 } from "../api/OrderApi";
 
 interface Order {
   _id: string;
-  orderCode: string; // 👈 THÊM DÒNG NÀY
+  orderCode: string;
   user: { name: string; email: string };
   totalPrice: number;
   isPaid: boolean;
@@ -21,18 +23,21 @@ interface Order {
 const AdminOrderManager: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
-  const [token, setToken] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState<string>("");
-
+  const { getToken } = useAuth();
   const navigate = useNavigate();
+  const [searchType, setSearchType] = useState<"orderCode" | "userName">(
+    "orderCode"
+  );
 
   useEffect(() => {
     const fetchOrders = async () => {
       try {
         setLoading(true);
-        const tokenFromStorage = localStorage.getItem("token") || "";
-        setToken(tokenFromStorage);
-        const data = await getAllOrders(tokenFromStorage);
+        const token = getToken();
+        if (!token) return;
+        const data = await getAllOrders(token);
+
         setOrders(data);
       } catch (err) {
         console.error("Lỗi khi load đơn hàng:", err);
@@ -42,15 +47,23 @@ const AdminOrderManager: React.FC = () => {
     };
 
     fetchOrders();
-  }, []);
+  }, [getToken]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        if (searchQuery) {
-          const results = await searchOrders(token, { userName: searchQuery });
-          setOrders(results);
+        const token = getToken();
+        if (!token) return;
+
+        if (searchQuery.trim()) {
+          if (searchType === "orderCode") {
+            const results = await searchOrders(token, searchQuery);
+            setOrders(results.orders);
+          } else {
+            const results = await searchOrdersByUserName(token, searchQuery);
+            setOrders(results.orders);
+          }
         } else {
           const data = await getAllOrders(token);
           setOrders(data);
@@ -63,7 +76,7 @@ const AdminOrderManager: React.FC = () => {
     };
 
     fetchData();
-  }, [searchQuery, token]);
+  }, [searchQuery, searchType, getToken]);
 
   const handleViewDetails = (orderId: string) => {
     navigate(`/admin/orders/${orderId}`);
@@ -72,6 +85,8 @@ const AdminOrderManager: React.FC = () => {
   const handleCancelOrder = async (orderId: string) => {
     if (!window.confirm("Bạn có chắc chắn muốn xóa đơn hàng này?")) return;
     try {
+      const token = getToken();
+      if (!token) return;
       await cancelOrder(token, orderId);
       setOrders((prev) => prev.filter((order) => order._id !== orderId));
     } catch (err) {
@@ -81,6 +96,8 @@ const AdminOrderManager: React.FC = () => {
 
   const handleUpdatePaid = async (orderId: string) => {
     try {
+      const token = getToken();
+      if (!token) return;
       await updateOrderPaymentStatus(token, orderId);
       setOrders((prev) =>
         prev.map((o) => (o._id === orderId ? { ...o, isPaid: true } : o))
@@ -92,6 +109,8 @@ const AdminOrderManager: React.FC = () => {
 
   const handleUpdateDelivered = async (orderId: string) => {
     try {
+      const token = getToken();
+      if (!token) return;
       await updateOrderDeliveryStatus(token, orderId, true);
       setOrders((prev) =>
         prev.map((o) => (o._id === orderId ? { ...o, isDelivered: true } : o))
@@ -109,11 +128,31 @@ const AdminOrderManager: React.FC = () => {
     <div className="p-4">
       <h1 className="text-2xl font-semibold mb-4">Quản lý đơn hàng</h1>
 
-      {/* Thanh tìm kiếm */}
       <div className="mb-4">
+        <div className="flex gap-2 mb-2">
+          <button
+            className={`px-4 py-2 rounded border ${
+              searchType === "orderCode" ? "bg-blue-500 text-white" : "bg-white"
+            }`}
+            onClick={() => setSearchType("orderCode")}
+          >
+            Theo mã đơn hàng
+          </button>
+          <button
+            className={`px-4 py-2 rounded border ${
+              searchType === "userName" ? "bg-blue-500 text-white" : "bg-white"
+            }`}
+            onClick={() => setSearchType("userName")}
+          >
+            Theo tên khách hàng
+          </button>
+        </div>
+
         <input
           type="text"
-          placeholder="Tìm kiếm theo ID hoặc tên người đặt..."
+          placeholder={`Tìm theo ${
+            searchType === "orderCode" ? "mã đơn hàng" : "tên khách hàng"
+          }...`}
           className="border px-3 py-2 rounded w-full"
           value={searchQuery}
           onChange={handleSearch}
@@ -139,9 +178,7 @@ const AdminOrderManager: React.FC = () => {
             {orders.map((order) => (
               <tr key={order._id}>
                 <td className="p-2 border">{order.orderCode}</td>
-                <td className="p-2">
-                  {order.user ? order.user.name : "Không xác định"}
-                </td>
+                <td className="p-2">{order.user?.name || "Không xác định"}</td>
                 <td className="p-2 border">
                   {order.totalPrice.toLocaleString()}đ
                 </td>

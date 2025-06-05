@@ -159,27 +159,37 @@ export const updateOrderStatus = async (
     );
   }
 };
-export const searchOrders = async (
-  token: string,
-  searchParams: {
-    paid?: boolean;
-    delivered?: boolean;
-    userName?: string;
-    startDate?: string;
-    endDate?: string;
-  }
-) => {
+export const searchOrders = async (token: string, orderCode: string) => {
   try {
     const response = await api.get("/orders/search", {
       headers: {
-        Authorization: `Bearer ${token}`, // Gửi token trong header
+        Authorization: `Bearer ${token}`,
       },
-      params: searchParams, // Gửi các tham số tìm kiếm dưới dạng query params
+      params: {
+        query: orderCode, // Chỉ gửi query là orderCode
+      },
     });
-    return response.data; // Trả về danh sách đơn hàng tìm kiếm
+
+    return response.data; // Trả về dữ liệu từ API
   } catch (error: any) {
     throw new Error(
       error.response?.data?.message || "Lỗi khi tìm kiếm đơn hàng!"
+    );
+  }
+};
+export const searchOrdersByUserName = async (token: string, name: string) => {
+  try {
+    const response = await api.get("/orders/search-user", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      params: { name },
+    });
+    return response.data;
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message ||
+        "Lỗi khi tìm kiếm đơn hàng theo tên khách hàng!"
     );
   }
 };
